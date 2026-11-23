@@ -178,6 +178,32 @@ whether the target is real.
 
 ---
 
+---
+
+## STATUS — all items addressed (23 Nov 2026, commit c8c7ec9)
+
+| # | Item | State |
+|---|---|---|
+| 1 | Localisation path | **Done** — 36 UI strings wrapped in `tr()`, plus `PlatformUI` for future languages |
+| 2 | Audio compression + loudness | **Done** — beds RMS/peak normalised (`city_bed` was 3.0× too quiet), QOA on long-form: 1722K → 348K |
+| 3 | Safe area + one-hand play | **Done** — `platform_ui.gd`, action floor clears the home bar, left-handed mirroring |
+| 4 | Accessibility basics | **Done** — settings menu, pause toggles, shape-coded map blips, hold-vs-tap, invert Y, sensitivity |
+| 5 | Save versioning | **Done** — `SAVE_VERSION 3` + `_migrate()` v1→v3, covered by tests |
+| 6 | Crash reporting | **Done** — `crash_reporter.gd`, rolling local log, remote sink left unset by design |
+| 7 | Voice budget | **DECIDED: no voice acting.** `dialogue_box.gd` is now the storytelling surface |
+| 8 | Unstick button | **Done** — `rescue.gd`, detects falls and wedging, keeps all progress |
+| 9 | Licence statement | **Done** — `LICENSE`, `docs/24_ASSET_USE_STATEMENT.md`, credits corrected |
+| 10 | Repo structure | **Done (better than planned)** — baked anim libs `.tres`→`.res`: 55.5 MB → 22.6 MB. Project 156 MB → 124 MB |
+
+### Bonus finding — the credits were wrong
+
+`main_menu.gd` credited **Quaternius** for the character models. The models are
+actually **three.js Soldier/Michelle/Xbot under MIT**. Shipping a credit to the
+wrong author is a licence breach even when the real licence is permissive.
+Corrected, with the engine MIT notice now reproduced in-product.
+
+---
+
 ## PRIORITY SUMMARY
 
 | # | Item | Cost now | Cost later |

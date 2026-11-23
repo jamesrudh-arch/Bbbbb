@@ -1,5 +1,5 @@
 LEVERAGE TEST REPORT
-2026-11-23T14:12:14
+2026-11-23T14:18:11
 
 PASS  content.districts==7  7
 PASS  districts have palettes+landmarks
@@ -100,9 +100,9 @@ PASS  subtitle scale default
 PASS  camera sensitivity default
 PASS  Crash autoload present
 PASS  rescue script loads
-PASS  crash log written  1232 bytes
+PASS  crash log written  2695 bytes
 PASS  world instantiated
-PASS  world build under 60s  1575 ms
+PASS  world build under 60s  1260 ms
 PASS  seven districts built  7
 PASS  districts populated  8535 objects
 PASS  sidewalk nav graph per district
