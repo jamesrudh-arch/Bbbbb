@@ -1097,7 +1097,7 @@ func hud_show_settings() -> void:
 	]:
 		var b := _btn(tgl[0], 14)
 		b.toggle_mode = true
-		b.button_pressed = bool(PlatformUI.get(tgl[1]))
+		b.button_pressed = (true == PlatformUI.get(tgl[1]))
 		var prop2: String = tgl[1]
 		var btn_ref := b
 		b.toggled.connect(func(on: bool):

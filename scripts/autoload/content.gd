@@ -39,7 +39,7 @@ const DISTRICTS := {
 		"music": "tension", "population": 7,
 	},
 	"railhead": {
-		"name": "Railhead", "grid": [0, 1], "tier": 2,
+		"name": "Railhead", "grid": [0, 1], "tier": 4,
 		"tagline": "The rail that fed the city, now feeding the foundries.",
 		"palette": {"sky": Color(0.40, 0.30, 0.27), "ground": Color(0.26, 0.21, 0.19),
 			"wall": Color(0.44, 0.33, 0.29), "trim": Color(0.62, 0.36, 0.22),
@@ -49,7 +49,7 @@ const DISTRICTS := {
 		"music": "tension", "population": 8,
 	},
 	"vesper_heights": {
-		"name": "Vesper Heights", "grid": [1, 1], "tier": 3,
+		"name": "Vesper Heights", "grid": [1, 1], "tier": 6,
 		"tagline": "Glass and security lights. They sleep well up here.",
 		"palette": {"sky": Color(0.30, 0.34, 0.46), "ground": Color(0.20, 0.22, 0.28),
 			"wall": Color(0.38, 0.42, 0.52), "trim": Color(0.72, 0.76, 0.86),
@@ -59,7 +59,7 @@ const DISTRICTS := {
 		"music": "explore", "population": 9,
 	},
 	"dockside": {
-		"name": "Dockside", "grid": [2, 2], "tier": 2,
+		"name": "Dockside", "grid": [2, 2], "tier": 3,
 		"tagline": "Container cranes, wet concrete, and cargo nobody declares.",
 		"palette": {"sky": Color(0.30, 0.36, 0.40), "ground": Color(0.24, 0.26, 0.27),
 			"wall": Color(0.40, 0.43, 0.45), "trim": Color(0.58, 0.55, 0.44),
@@ -69,7 +69,7 @@ const DISTRICTS := {
 		"music": "tension", "population": 7,
 	},
 	"neon_mile": {
-		"name": "Neon Mile", "grid": [2, 1], "tier": 3,
+		"name": "Neon Mile", "grid": [2, 1], "tier": 5,
 		"tagline": "Two in the morning and nobody's counting the receipts.",
 		"palette": {"sky": Color(0.22, 0.18, 0.32), "ground": Color(0.16, 0.14, 0.22),
 			"wall": Color(0.28, 0.22, 0.36), "trim": Color(0.98, 0.34, 0.72),

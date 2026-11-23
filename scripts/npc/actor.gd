@@ -255,7 +255,7 @@ func take_hit(amount: float, _from) -> void:
 	if ai != null and _from != null and is_instance_valid(_from):
 		var dir: Vector3 = _from.global_position - global_position
 		var res: Dictionary = ai.on_hit(amount, dir)
-		if bool(res.get("blocked", false)):
+		if (true == res.get("blocked", false)):
 			amount = float(res.get("damage", 0.0))
 			if amount <= 0.5:
 				return

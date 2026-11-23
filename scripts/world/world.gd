@@ -62,6 +62,7 @@ func _ready() -> void:
 	_wire_rescue()
 	_wire_dialogue()
 	_wire_conversation()
+	_wire_content_engine()
 	world_streamer.setup(self, districts)
 	traffic.setup(self, districts)
 	npcs.setup(self, districts)
@@ -146,6 +147,15 @@ func say(lines: Array) -> void:
 func ask(question: Dictionary, choices: Array) -> void:
 	if dialogue != null:
 		dialogue.ask(question, choices)
+
+## Contracts, bounties and street events.
+var content_engine: Node = null
+
+func _wire_content_engine() -> void:
+	content_engine = load("res://scripts/systems/content_engine.gd").new()
+	content_engine.name = "ContentEngine"
+	add_child(content_engine)
+	content_engine.setup(self)
 
 ## All spoken content: barks, witness reactions and named-character talks.
 var conversations: Node = null

@@ -63,6 +63,7 @@ var drinks: int = 0
 var flags: Dictionary = {}
 var collectibles: Array = []
 var completed_missions: Array = []
+var failed_missions: Array = []
 var completed_jobs: Array = []
 var reputation: Dictionary = {}
 var achievements: Array = []
@@ -162,7 +163,7 @@ func set_flag(flag: String, value: bool = true) -> void:
 	flags[flag] = value
 
 func has_flag(flag: String) -> bool:
-	return bool(flags.get(flag, false))
+	return (true == flags.get(flag, false))
 
 # =========================================================== inventory
 func buy_item(item: Dictionary) -> bool:
@@ -380,6 +381,20 @@ func _complete_mission() -> void:
 	mission_completed.emit(id)
 	notify("Mission complete", data.get("title", id), "mission")
 	mission = {}
+
+## A mission failed on its own terms (escort died, tail blown, timer expired).
+## Distinct from abandon: this is a loss, and it should read like one.
+func fail_mission(reason: String) -> void:
+	if mission.is_empty():
+		return
+	var title: String = str(mission.get("data", {}).get("title", mission.get("id", "")))
+	notify("FAILED", reason, "error")
+	Crash.event("mission_failed", "%s: %s" % [str(mission.get("id", "")), reason])
+	mission = {}
+	failed_missions.append(title)
+	mission_failed.emit(title, reason)
+
+signal mission_failed(title, reason)
 
 func abandon_mission() -> void:
 	if mission.is_empty(): return

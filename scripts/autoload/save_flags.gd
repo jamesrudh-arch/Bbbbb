@@ -10,7 +10,7 @@ func _read() -> ConfigFile:
 	return cf
 
 func opening_seen() -> bool:
-	return bool(_read().get_value("intro", "opening_seen", false))
+	return (true == _read().get_value("intro", "opening_seen", false))
 
 func mark_opening_seen() -> void:
 	var cf := _read()

@@ -118,6 +118,7 @@ func _talk_to(target: Node3D) -> void:
 	await world.dialogue.line_finished
 	world.player.set("dialogue_locked", false)
 	world.hud.set_cinematic_mode(false)
+	world.missions.report_conversation(npc_id, str(result["outcome"]))
 	world.missions.report_talk(npc_id)
 	if result["outcome"].begins_with("lead"):
 		Game.notify("LEAD", result["closing"], "info")

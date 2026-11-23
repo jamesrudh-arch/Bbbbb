@@ -59,7 +59,7 @@ func _process(delta: float) -> void:
 			continue
 		if spec.get("once", false) and Game.has_flag(str(spec.get("flag", "fired_" + id))):
 			continue
-		var ok: bool = bool(t["when"].call())
+		var ok: bool = (true == t["when"].call())
 		if not ok:
 			continue
 		_fired[id] = true

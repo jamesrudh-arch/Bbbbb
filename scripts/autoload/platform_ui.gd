@@ -72,9 +72,9 @@ func load_settings() -> void:
 	if cf.load(CFG) != OK:
 		return
 	subtitle_size = float(cf.get_value("a11y", "subtitle_size", 1.0))
-	high_contrast_blips = bool(cf.get_value("a11y", "high_contrast_blips", false))
-	hold_to_heavy = bool(cf.get_value("a11y", "hold_to_heavy", false))
-	camera_invert_y = bool(cf.get_value("input", "invert_y", false))
+	high_contrast_blips = (true == cf.get_value("a11y", "high_contrast_blips", false))
+	hold_to_heavy = (true == cf.get_value("a11y", "hold_to_heavy", false))
+	camera_invert_y = (true == cf.get_value("input", "invert_y", false))
 	camera_sensitivity = float(cf.get_value("input", "sensitivity", 1.0))
-	one_hand_left = bool(cf.get_value("ui", "one_hand_left", false))
+	one_hand_left = (true == cf.get_value("ui", "one_hand_left", false))
 	touch_scale = float(cf.get_value("ui", "touch_scale", 1.0))

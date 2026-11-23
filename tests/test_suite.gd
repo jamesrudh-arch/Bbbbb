@@ -23,7 +23,7 @@ func _ready() -> void:
 
 func _run() -> void:
 	print("\n=========== LEVERAGE TEST SUITE ===========")
-	for step in ["content", "input", "save_load", "economy", "combat", "audio", "scenes", "migration", "a11y", "archetypes", "ai", "style", "impact", "conversation"]:
+	for step in ["content", "input", "save_load", "economy", "combat", "audio", "scenes", "migration", "a11y", "archetypes", "ai", "style", "impact", "conversation", "content_engine"]:
 		print("  [step] ", step)
 		match step:
 			"content": _test_content()
@@ -40,6 +40,7 @@ func _run() -> void:
 			"style": _test_style_rank()
 			"impact": _test_impact()
 			"conversation": _test_conversation()
+			"content_engine": _test_content_engine()
 	print("  [step] world")
 	await _test_world()
 	print("  [step] missions")
@@ -333,7 +334,7 @@ func _test_archetypes() -> void:
 		"%d defined" % Archetypes.ARCHETYPES.size())
 	var bosses := 0
 	for id in Archetypes.all_ids():
-		if bool(Archetypes.get_archetype(id).get("is_boss", false)):
+		if (true == Archetypes.get_archetype(id).get("is_boss", false)):
 			bosses += 1
 	_ok("bosses exist alongside the regular roster", bosses >= 3, "%d bosses" % bosses)
 	_ok("roster covers street, ring and corporate",
@@ -386,7 +387,7 @@ func _test_archetypes() -> void:
 	_ok("enforcer far tougher than lookout",
 		float(enforcer["health"]) > float(lookout["health"]) * 2.0)
 	_ok("lookout is faster", float(lookout["speed"]) > float(enforcer["speed"]))
-	_ok("lookout calls backup", bool(lookout.get("calls_backup", false)))
+	_ok("lookout calls backup", (true == lookout.get("calls_backup", false)))
 	_ok("lookout can flee", lookout.has("flees_below"))
 
 	# Roster respects district tier.
@@ -546,6 +547,92 @@ func _test_conversation() -> void:
 		w += conv.WITNESS[k].size()
 	_ok("witness reactions authored", w >= 9, "%d lines" % w)
 	conv.queue_free()
+
+## Generated content must hit its targets, stay spread across districts, scale
+## with risk, and be reproducible. A board that hands out 35 jobs in one district
+## and none in six others is not a content engine.
+func _test_content_engine() -> void:
+	var e = load("res://scripts/systems/content_engine.gd").new()
+	add_child(e)
+	e.world = null
+	e.generate(4242)
+
+	_ok("72 contracts", e.contracts().size() == e.CONTRACT_TARGET,
+		"%d" % e.contracts().size())
+	_ok("28 bounties", e.bounties().size() == e.BOUNTY_TARGET,
+		"%d" % e.bounties().size())
+	_ok("36 events", e.events().size() == e.EVENT_TARGET,
+		"%d" % e.events().size())
+
+	# District spread: no district may hold more than a quarter of the board.
+	var per := {}
+	for c in e.contracts():
+		per[c["district"]] = int(per.get(c["district"], 0)) + 1
+	var worst := 0
+	for d in per:
+		worst = maxi(worst, int(per[d]))
+	_ok("contracts spread across districts", worst <= 20,
+		"worst district has %d of %d" % [worst, e.contracts().size()])
+	_ok("every district has work", per.size() == Content.DISTRICTS.size(),
+		"%d of %d districts" % [per.size(), Content.DISTRICTS.size()])
+
+	# Variety: at least five different contract kinds.
+	var kinds := {}
+	for c in e.contracts():
+		kinds[c["kind"]] = true
+	_ok("contract variety", kinds.size() >= 5, "%d kinds" % kinds.size())
+
+	# Pay must scale with risk.
+	var lo := []
+	var hi := []
+	for c in e.contracts():
+		if int(c["tier"]) <= 2: lo.append(int(c["reward"]["money"]))
+		if int(c["tier"]) >= 5: hi.append(int(c["reward"]["money"]))
+	var avg := func(arr: Array) -> float:
+		if arr.is_empty(): return 0.0
+		var total := 0.0
+		for v in arr: total += float(v)
+		return total / float(arr.size())
+	_ok("high-risk work pays more", avg.call(hi) > avg.call(lo),
+		"%.0f vs %.0f" % [avg.call(hi), avg.call(lo)])
+
+	# Bounties must name real archetypes.
+	var invalid := 0
+	for b in e.bounties():
+		if not Archetypes.has_archetype(str(b["archetype"])):
+			invalid += 1
+	_ok("bounties use real archetypes", invalid == 0, "%d invalid" % invalid)
+
+	# No duplicate titles on a district board: the screenshot showed the same job
+	# listed twice, which reads as a bug to the player even when the data is fine.
+	var title_dups := 0
+	for d in Content.DISTRICTS:
+		var seen := {}
+		for c in e.contracts_in(str(d)):
+			var t := str(c["title"])
+			if seen.has(t):
+				title_dups += 1
+			seen[t] = true
+	_ok("no duplicate titles within a district", title_dups == 0, "%d dups" % title_dups)
+	_ok("every district has sub-locations", e.SUBLOCATIONS.size() == Content.DISTRICTS.size())
+
+	# Determinism.
+	e.generate(999)
+	var a := str(e.contracts()[0]["title"]) + str(e.contracts()[0]["reward"]["money"])
+	e.generate(999)
+	var b := str(e.contracts()[0]["title"]) + str(e.contracts()[0]["reward"]["money"])
+	_ok("same seed reproduces the board", a == b)
+
+	# District tiers must span the difficulty range, or escalation is impossible.
+	var tiers := []
+	for d in Content.DISTRICTS:
+		tiers.append(int(Content.DISTRICTS[d].get("tier", 1)))
+	tiers.sort()
+	_ok("district tiers span 1..6", tiers[0] == 1 and tiers[-1] == 6,
+		"range %d..%d" % [tiers[0], tiers[-1]])
+	_ok("district tiers are not all easy", tiers[-1] >= 5, "max %d" % tiers[-1])
+
+	e.queue_free()
 
 func _report() -> void:
 	print("\n------------------- RESULTS -------------------")

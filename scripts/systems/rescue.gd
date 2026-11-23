@@ -31,7 +31,7 @@ func _process(delta: float) -> void:
 	if world.dialogue_active():
 		_stuck = 0.0
 		return
-	if world.get("player") != null and bool(world.player.get("dialogue_locked")):
+	if world.get("player") != null and (true == world.player.get("dialogue_locked")):
 		_stuck = 0.0
 		return
 	_tick = CHECK_INTERVAL

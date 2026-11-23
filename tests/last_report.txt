@@ -1,5 +1,5 @@
 LEVERAGE TEST REPORT
-2026-11-23T15:25:50
+2026-11-23T15:44:53
 
 PASS  content.districts==7  7
 PASS  districts have palettes+landmarks
@@ -100,7 +100,7 @@ PASS  subtitle scale default
 PASS  camera sensitivity default
 PASS  Crash autoload present
 PASS  rescue script loads
-PASS  crash log written  6606 bytes
+PASS  crash log written  7530 bytes
 PASS  archetype roster at least 24  25 defined
 PASS  bosses exist alongside the regular roster  3 bosses
 PASS  roster covers street, ring and corporate
@@ -150,10 +150,23 @@ PASS  charm pays more when trusted  14 vs 10
 PASS  unknown npc has no tree
 PASS  unknown npc resolves empty
 PASS  witness reactions authored  9 lines
+PASS  72 contracts  72
+PASS  28 bounties  28
+PASS  36 events  36
+PASS  contracts spread across districts  worst district has 14 of 72
+PASS  every district has work  7 of 7 districts
+PASS  contract variety  7 kinds
+PASS  high-risk work pays more  680 vs 380
+PASS  bounties use real archetypes  0 invalid
+PASS  no duplicate titles within a district  0 dups
+PASS  every district has sub-locations
+PASS  same seed reproduces the board
+PASS  district tiers span 1..6  range 1..6
+PASS  district tiers are not all easy  max 6
 PASS  world instantiated
-PASS  world build under 60s  1287 ms
+PASS  world build under 60s  1308 ms
 PASS  seven districts built  7
-PASS  districts populated  8535 objects
+PASS  districts populated  8993 objects
 PASS  sidewalk nav graph per district
 PASS  drive graph per district
 PASS  enterable portals exist  21 portals
@@ -180,4 +193,4 @@ PASS  side job starts with job_ prefix
 PASS  job completes into completed_jobs
 PASS  job unlocks a discipline reward  ["brawler", "kickboxing"]
 
-PASSED: 178   FAILED: 0   TOTAL: 178
+PASSED: 191   FAILED: 0   TOTAL: 191

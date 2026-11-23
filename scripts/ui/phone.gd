@@ -178,6 +178,7 @@ func show_home() -> void:
 	row.add_child(_btn("MESSAGES", func(): show_contacts(false)))
 	row.add_child(_btn("RADIO", func(): _cycle_radio()))
 	_root.add_child(row)
+	_root.add_child(_btn(tr("JOBS"), func(): _open_job_board()))
 	_root.add_child(_sep())
 	var recent: Array = Game.call_log.slice(maxi(0, Game.call_log.size() - 3))
 	if not recent.is_empty():
@@ -191,6 +192,57 @@ func show_home() -> void:
 		_root.add_child(_sub(tr("%d unread message%s") % [unread, "" if unread == 1 else "s"]))
 	_root.add_child(_spacer())
 	_root.add_child(_btn("PUT AWAY", func(): _close()))
+
+## The job board lives on the phone: work comes to you, you don't walk to it.
+func _open_job_board() -> void:
+	if world == null or world.content_engine == null:
+		return
+	var board = load("res://scripts/ui/job_board.gd").new()
+	board.setup(world)
+	board.job_chosen.connect(_on_job_chosen)
+	board.closed.connect(func():
+		board.queue_free()
+		show_home())
+	world.hud.add_child(board)
+
+func _on_job_chosen(job: Dictionary) -> void:
+	# A generated job becomes a real mission with objectives the manager can run.
+	var objectives: Array = []
+	match str(job.get("objective", "")):
+		"fight":
+			objectives = [{"type": "fight", "target": str(job.get("place", "")), "text": "Clear the location"}]
+		"collect":
+			objectives = [{"type": "collect", "target": "ledger_page", "count": 3, "text": "Recover the goods"}]
+		"escort":
+			objectives = [{"type": "escort", "target": str(job.get("place", "")), "text": "Get them there alive"}]
+		"tail":
+			objectives = [{"type": "tail", "target": str(job.get("place", "")), "text": "Follow without being seen"}]
+		"deliver":
+			objectives = [{"type": "deliver", "target": str(job.get("place", "")), "text": "Make the drop"}]
+		"defend":
+			objectives = [{"type": "defend", "target": str(job.get("place", "")), "seconds": 45.0, "text": "Hold for 45 seconds"}]
+		"intimidate":
+			objectives = [{"type": "intimidate", "target": "eze", "text": "Make them understand"}]
+		_:
+			objectives = [{"type": "reach", "target": str(job.get("place", "")), "text": "Get there"}]
+	if job.has("alive_required") and true == job["alive_required"]:
+		objectives = [{"type": "bounty", "target": str(job.get("place", "")),
+			"archetype": str(job.get("archetype", "street_thug")), "tier": int(job.get("tier", 3)),
+			"name": str(job.get("name", "")), "text": "Bring them in alive"}]
+	elif job.has("name"):
+		objectives = [{"type": "bounty", "target": str(job.get("place", "")),
+			"archetype": str(job.get("archetype", "street_thug")), "tier": int(job.get("tier", 3)),
+			"name": str(job.get("name", "")), "text": "Take them down"}]
+
+	Game.start_mission(str(job.get("id", "job")), {
+		"title": str(job.get("title", "Job")),
+		"district": str(job.get("district", Game.current_district)),
+		"brief": str(job.get("flavour", job.get("charge", ""))),
+		"objectives": objectives,
+		"reward": job.get("reward", {}),
+	})
+	Game.notify("CONTRACT", str(job.get("title", "Job")), "info")
+	_close()
 
 func show_contacts(for_calls: bool) -> void:
 	_screen = CALL_SCREEN if for_calls else THREADS

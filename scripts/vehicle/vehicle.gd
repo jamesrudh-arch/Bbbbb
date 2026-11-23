@@ -34,7 +34,7 @@ func configure(kind: String) -> void:
 	vehicle_type = kind
 	var cfg: Dictionary = Content.VEHICLE_TYPES.get(kind, Content.VEHICLE_TYPES["sedan"])
 	mass = float(cfg["mass"])
-	_two_wheel = bool(cfg.get("two_wheel", false))
+	_two_wheel = (true == cfg.get("two_wheel", false))
 	_configured = true
 	# If we are already in the tree, rebuild with the requested type.
 	if is_inside_tree():
@@ -45,7 +45,7 @@ func _ensure_built() -> void:
 	_built = true
 	var cfg: Dictionary = Content.VEHICLE_TYPES.get(vehicle_type, Content.VEHICLE_TYPES["sedan"])
 	mass = float(cfg["mass"])
-	_two_wheel = bool(cfg.get("two_wheel", false))
+	_two_wheel = (true == cfg.get("two_wheel", false))
 	_setup_body()
 	engine_sound = AudioStreamPlayer3D.new()
 	engine_sound.volume_db = -60.0
