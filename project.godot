@@ -29,6 +29,8 @@ Events="*res://scripts/autoload/events.gd"
 Audio="*res://scripts/autoload/audio_director.gd"
 Loader="*res://scripts/autoload/scene_loader.gd"
 SaveFlags="*res://scripts/autoload/save_flags.gd"
+PlatformUI="*res://scripts/autoload/platform_ui.gd"
+Crash="*res://scripts/autoload/crash_reporter.gd"
 
 [display]
 

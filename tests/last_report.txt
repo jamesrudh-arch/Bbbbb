@@ -1,5 +1,5 @@
 LEVERAGE TEST REPORT
-2026-11-23T13:18:14
+2026-11-23T14:12:14
 
 PASS  content.districts==7  7
 PASS  districts have palettes+landmarks
@@ -84,8 +84,25 @@ PASS  scene loads: world.tscn
 PASS  scene loads: player.tscn
 PASS  project uses mobile renderer
 PASS  main scene is boot
+PASS  migrate v1 -> current  got v3
+PASS  migrate v1 keeps money
+PASS  migrate v1 adds messages
+PASS  migrate v1 adds achievements
+PASS  migrate v1 adds stats
+PASS  migrate v1 adds reputation
+PASS  migrate is idempotent
+PASS  migrate handles missing version
+PASS  PlatformUI autoload present
+PASS  safe top reserved  12
+PASS  safe bottom reserved  16
+PASS  action floor clears home bar
+PASS  subtitle scale default
+PASS  camera sensitivity default
+PASS  Crash autoload present
+PASS  rescue script loads
+PASS  crash log written  1232 bytes
 PASS  world instantiated
-PASS  world build under 60s  7059 ms
+PASS  world build under 60s  1575 ms
 PASS  seven districts built  7
 PASS  districts populated  8535 objects
 PASS  sidewalk nav graph per district
@@ -114,4 +131,4 @@ PASS  side job starts with job_ prefix
 PASS  job completes into completed_jobs
 PASS  job unlocks a discipline reward  ["brawler", "kickboxing"]
 
-PASSED: 112   FAILED: 0   TOTAL: 112
+PASSED: 129   FAILED: 0   TOTAL: 129

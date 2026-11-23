@@ -14,6 +14,7 @@ var world: Node3D = null
 var _pulse := 0.0
 var _route: Array = []        # world-space Vector3 points
 var _route_refresh := 0.0
+var _blip_scale := 1.0
 var _zoom := VIEW_ON_FOOT
 
 func setup(w: Node3D) -> void:
@@ -113,6 +114,46 @@ func _blip(pos: Vector3, col: Color, size: float) -> void:
 	draw_circle(s, size + 1.6, Color(0.05, 0.06, 0.08, 0.9))
 	draw_circle(s, size, col)
 
+## Shape-coded blip. kind: "shop" | "ring" | "police" | "objective".
+## Shape carries the meaning; colour is reinforcement only.
+func _blip_shaped(pos: Vector3, col: Color, size: float, kind: String) -> void:
+	if world == null or world.player == null:
+		return
+	var s := _to_screen(pos, world.player.global_position)
+	if s.distance_to(_centre()) > RADIUS - 3.0:
+		return
+	var outline := Color(0.05, 0.06, 0.08, 0.92)
+	match kind:
+		"shop":
+			_rect_blip(s, size, size, col, outline)          # square = shop
+		"ring":
+			_rect_blip(s, size * 1.2, size * 1.2, col, outline, deg_to_rad(45.0))  # diamond = fight ring
+		"police":
+			_ring_blip(s, size * 1.3, col)                   # hollow = police
+		_:
+			_blip(pos, col, size)
+
+func _rect_blip(c: Vector2, w: float, h: float, col: Color, outline: Color, rot: float = 0.0) -> void:
+	var pts := PackedVector2Array()
+	for i in 4:
+		var a := rot + PI * 0.25 + i * PI * 0.5
+		pts.append(c + Vector2(cos(a) * w * 0.72, sin(a) * h * 0.72))
+	draw_colored_polygon(pts, outline)
+	var inner := PackedVector2Array()
+	for i in 4:
+		var a := rot + PI * 0.25 + i * PI * 0.5
+		inner.append(c + Vector2(cos(a) * w * 0.55, sin(a) * h * 0.55))
+	draw_colored_polygon(inner, col)
+
+func _ring_blip(c: Vector2, r: float, col: Color) -> void:
+	draw_circle(c, r + 1.6, Color(0.05, 0.06, 0.08, 0.9))
+	draw_arc(c, r * 0.62, 0.0, TAU, 20, col, maxf(1.6, r * 0.55), true)
+
+## Re-read accessibility settings; called by the HUD when they change.
+func apply_accessibility() -> void:
+	_blip_scale = 1.35 if PlatformUI.high_contrast_blips else 1.0
+	queue_redraw()
+
 func _blip_mission(pp: Vector3) -> void:
 	var text: String = ""
 	if not Game.mission.is_empty():
@@ -144,7 +185,7 @@ func _blip_shops(pp: Vector3) -> void:
 		var pos: Vector3 = world.builder.landmark_position(id) if world.builder.has_method("landmark_position") else Vector3.INF
 		if pos == Vector3.INF:
 			continue
-		_blip(pos, Color(0.42, 0.78, 0.50), 2.6)
+		_blip_shaped(pos, Color(0.42, 0.78, 0.50), 2.6 * _blip_scale, "shop")
 
 func _blip_rings(pp: Vector3) -> void:
 	# Ring venues are authored per district; draw one marker per district centre
@@ -153,7 +194,7 @@ func _blip_rings(pp: Vector3) -> void:
 		if not Game.has_flag("ring_" + id):
 			continue
 		var pos: Vector3 = world.builder.district_center(id) if world.builder != null else Vector3.INF
-		_blip(pos, Color(0.86, 0.36, 0.36), 3.0)
+		_blip_shaped(pos, Color(0.86, 0.36, 0.36), 3.0 * _blip_scale, "ring")
 
 func _blip_police(pp: Vector3) -> void:
 	if world.police == null:
@@ -163,7 +204,7 @@ func _blip_police(pp: Vector3) -> void:
 	for u in units:
 		if not is_instance_valid(u):
 			continue
-		_blip(u.global_position, Color(0.35, 0.62, 0.98, flash), 3.0)
+		_blip_shaped(u.global_position, Color(0.35, 0.62, 0.98, flash), 3.0 * _blip_scale, "police")
 
 ## Keeps an off-screen objective visible by pinning it to the rim.
 func _clamp_edge(s: Vector2) -> Vector2:

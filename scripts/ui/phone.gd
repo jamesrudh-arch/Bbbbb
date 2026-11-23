@@ -170,7 +170,7 @@ func show_home() -> void:
 	_screen = HOME
 	_clear()
 	_root.add_child(_hdr("LEVERAGE OS", "PHONE", Color(0.95, 0.78, 0.30)))
-	_root.add_child(_sub("Marcus Adeyemi · Ash Row"))
+	_root.add_child(_sub(tr("Marcus Adeyemi · Ash Row")))
 	_root.add_child(_sep())
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 8)
@@ -181,14 +181,14 @@ func show_home() -> void:
 	_root.add_child(_sep())
 	var recent: Array = Game.call_log.slice(maxi(0, Game.call_log.size() - 3))
 	if not recent.is_empty():
-		_root.add_child(_sub("RECENT"))
+		_root.add_child(_sub(tr("RECENT")))
 		for entry in recent:
 			var cname: String = Content.CHARACTERS.get(entry.get("from", ""), {}).get("name", "Unknown")
 			var state := "answered" if entry.get("answered", false) else "missed"
-			_root.add_child(_sub("· %s — %s" % [cname, state]))
+			_root.add_child(_sub(tr("· %s — %s") % [cname, state]))
 	var unread := _unread_total()
 	if unread > 0:
-		_root.add_child(_sub("%d unread message%s" % [unread, "" if unread == 1 else "s"]))
+		_root.add_child(_sub(tr("%d unread message%s") % [unread, "" if unread == 1 else "s"]))
 	_root.add_child(_spacer())
 	_root.add_child(_btn("PUT AWAY", func(): _close()))
 
@@ -196,7 +196,7 @@ func show_contacts(for_calls: bool) -> void:
 	_screen = CALL_SCREEN if for_calls else THREADS
 	_clear()
 	_root.add_child(_hdr("", "CONTACTS" if for_calls else "MESSAGES", Color(0.95, 0.78, 0.30)))
-	_root.add_child(_sub("Tap to call" if for_calls else "Tap to read"))
+	_root.add_child(_sub(tr("Tap to call") if for_calls else "Tap to read"))
 	_root.add_child(_sep())
 	var sc := ScrollContainer.new()
 	sc.custom_minimum_size = Vector2(0, 420)
@@ -280,7 +280,7 @@ func show_thread(cid: String) -> void:
 	_root.add_child(_sep())
 	var list: Array = Game.messages.get(cid, [])
 	if list.is_empty():
-		_root.add_child(_sub("No messages."))
+		_root.add_child(_sub(tr("No messages.")))
 	else:
 		var sc := ScrollContainer.new()
 		sc.custom_minimum_size = Vector2(0, 420)

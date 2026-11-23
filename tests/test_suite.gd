@@ -23,7 +23,7 @@ func _ready() -> void:
 
 func _run() -> void:
 	print("\n=========== LEVERAGE TEST SUITE ===========")
-	for step in ["content", "input", "save_load", "economy", "combat", "audio", "scenes"]:
+	for step in ["content", "input", "save_load", "economy", "combat", "audio", "scenes", "migration", "a11y"]:
 		print("  [step] ", step)
 		match step:
 			"content": _test_content()
@@ -33,6 +33,8 @@ func _run() -> void:
 			"combat": _test_combat_math()
 			"audio": _test_audio_assets()
 			"scenes": _test_scene_resources()
+			"migration": _test_save_migration()
+			"a11y": _test_platform()
 	print("  [step] world")
 	await _test_world()
 	print("  [step] missions")
@@ -287,6 +289,34 @@ func _test_mission_flow() -> void:
 	_ok("job unlocks a discipline reward", Game.unlocked_disciplines.size() > 1, str(Game.unlocked_disciplines))
 
 # ------------------------------------------------------------------ report
+## Old saves must upgrade forward instead of losing progress.
+func _test_save_migration() -> void:
+	var up: Dictionary = Game._migrate({"version": 1, "money": 500})
+	_ok("migrate v1 -> current", int(up.get("version", 0)) == Game.SAVE_VERSION,
+		"got v%d" % int(up.get("version", 0)))
+	_ok("migrate v1 keeps money", int(up.get("money", 0)) == 500)
+	_ok("migrate v1 adds messages", up.has("messages"))
+	_ok("migrate v1 adds achievements", up.has("achievements"))
+	_ok("migrate v1 adds stats", up.has("stats"))
+	_ok("migrate v1 adds reputation", up.has("reputation"))
+	var already: Dictionary = Game._migrate({"version": Game.SAVE_VERSION})
+	_ok("migrate is idempotent", int(already.get("version", 0)) == Game.SAVE_VERSION)
+	var empty: Dictionary = Game._migrate({})
+	_ok("migrate handles missing version", int(empty.get("version", 0)) == Game.SAVE_VERSION)
+
+## Safe areas and accessibility defaults must exist and be sane.
+func _test_platform() -> void:
+	_ok("PlatformUI autoload present", PlatformUI != null)
+	_ok("safe top reserved", PlatformUI.safe_top >= 12.0, "%.0f" % PlatformUI.safe_top)
+	_ok("safe bottom reserved", PlatformUI.safe_bottom >= 16.0, "%.0f" % PlatformUI.safe_bottom)
+	_ok("action floor clears home bar", PlatformUI.action_floor() > PlatformUI.safe_bottom)
+	_ok("subtitle scale default", is_equal_approx(PlatformUI.subtitle_size, 1.0))
+	_ok("camera sensitivity default", is_equal_approx(PlatformUI.camera_sensitivity, 1.0))
+	_ok("Crash autoload present", Crash != null)
+	_ok("rescue script loads", load("res://scripts/systems/rescue.gd") != null)
+	_ok("crash log written", Crash.read_log().length() > 0,
+		"%d bytes" % Crash.read_log().length())
+
 func _report() -> void:
 	print("\n------------------- RESULTS -------------------")
 	for r in results:

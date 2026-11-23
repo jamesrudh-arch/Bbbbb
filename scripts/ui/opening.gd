@@ -27,7 +27,7 @@ func _ready() -> void:
 	cine.finished.connect(_on_cinematic_done)
 
 	_skip = Label.new()
-	_skip.text = "TAP TO SKIP"
+	_skip.text = tr("TAP TO SKIP")
 	_skip.add_theme_font_size_override("font_size", 13)
 	_skip.add_theme_color_override("font_color", Color(0.55, 0.58, 0.64, 0.75))
 	_skip.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)

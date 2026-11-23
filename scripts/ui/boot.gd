@@ -94,13 +94,13 @@ func _build_title() -> void:
 	center.add_theme_constant_override("separation", 4)
 	_stage_root.add_child(center)
 	var title := Label.new()
-	title.text = "LEVERAGE"
+	title.text = tr("LEVERAGE")
 	title.add_theme_font_size_override("font_size", 104)
 	title.add_theme_color_override("font_color", Color(0.93, 0.82, 0.60))
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	center.add_child(title)
 	var tag := Label.new()
-	tag.text = "EVERYBODY HAS SOMETHING ON YOU."
+	tag.text = tr("EVERYBODY HAS SOMETHING ON YOU.")
 	tag.add_theme_font_size_override("font_size", 16)
 	tag.add_theme_color_override("font_color", Color(0.62, 0.60, 0.56))
 	tag.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -160,7 +160,7 @@ func _build_notice() -> void:
 	v.add_theme_constant_override("separation", 12)
 	p.add_child(v)
 	var h := Label.new()
-	h.text = "CONTENT NOTICE"
+	h.text = tr("CONTENT NOTICE")
 	h.add_theme_font_size_override("font_size", 20)
 	h.add_theme_color_override("font_color", Color(0.92, 0.74, 0.42))
 	v.add_child(h)
@@ -177,7 +177,7 @@ func _build_notice() -> void:
 	body.custom_minimum_size = Vector2(650, 0)
 	v.add_child(body)
 	var accept := Button.new()
-	accept.text = "I UNDERSTAND"
+	accept.text = tr("I UNDERSTAND")
 	accept.add_theme_font_size_override("font_size", 16)
 	accept.pressed.connect(func(): _save_notice(); _advance())
 	v.add_child(accept)

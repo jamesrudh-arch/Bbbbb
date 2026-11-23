@@ -64,6 +64,7 @@ var flags: Dictionary = {}
 var collectibles: Array = []
 var completed_missions: Array = []
 var completed_jobs: Array = []
+var reputation: Dictionary = {}
 var achievements: Array = []
 var stats: Dictionary = {"fights_won": 0, "fights_lost": 0, "distance_walked": 0.0,
 	"distance_driven": 0.0, "money_earned": 0, "money_spent": 0, "missions_done": 0,
@@ -422,7 +423,7 @@ func _slot_path(slot: int) -> String:
 
 func save_game(slot: int) -> bool:
 	var d := {
-		"version": 2,
+		"version": SAVE_VERSION,
 		"saved_at": Time.get_datetime_string_from_system(),
 		"play_time": play_time,
 		"money": money, "xp": xp, "level": level,
@@ -464,6 +465,28 @@ func slot_info(slot: int) -> Dictionary:
 		"missions": (parsed.get("completed_missions", []) as Array).size(),
 	}
 
+## Current save schema. Bump this whenever the shape changes and add a step to
+## _migrate() so old saves are upgraded forward instead of losing progress.
+const SAVE_VERSION := 3
+
+## Upgrade an older save in place. Each step is additive and idempotent.
+func _migrate(d: Dictionary) -> Dictionary:
+	var v := int(d.get("version", 1))
+	if v < 2:
+		# v1 had no phone state; give it empty defaults.
+		if not d.has("call_log"): d["call_log"] = []
+		if not d.has("missed_calls"): d["missed_calls"] = []
+		if not d.has("messages"): d["messages"] = {}
+		v = 2
+	if v < 3:
+		# v3 adds reputation, achievements and play statistics.
+		if not d.has("reputation"): d["reputation"] = {}
+		if not d.has("achievements"): d["achievements"] = []
+		if not d.has("stats"): d["stats"] = {}
+		v = 3
+	d["version"] = v
+	return d
+
 func load_game(slot: int) -> bool:
 	var path := _slot_path(slot)
 	if not FileAccess.file_exists(path): return false
@@ -472,7 +495,7 @@ func load_game(slot: int) -> bool:
 	var parsed = JSON.parse_string(f.get_as_text())
 	f.close()
 	if typeof(parsed) != TYPE_DICTIONARY: return false
-	var d: Dictionary = parsed
+	var d: Dictionary = _migrate(parsed)
 	money = int(d.get("money", 120))
 	xp = int(d.get("xp", 0))
 	level = int(d.get("level", 1))
@@ -496,6 +519,9 @@ func load_game(slot: int) -> bool:
 	unlocked_disciplines = d.get("unlocked_disciplines", ["brawler"])
 	relationships = d.get("relationships", {})
 	trust = d.get("trust", {"family": 60, "corporation": 0, "crew": 20, "police": 10})
+	reputation = d.get("reputation", {})
+	achievements = d.get("achievements", [])
+	stats = d.get("stats", {})
 	drinks = int(d.get("drinks", 0))
 	flags = d.get("flags", {})
 	collectibles = d.get("collectibles", [])

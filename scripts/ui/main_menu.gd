@@ -97,13 +97,13 @@ func _build_menu() -> void:
 	add_child(left)
 
 	var title := Label.new()
-	title.text = "LEVERAGE"
+	title.text = tr("LEVERAGE")
 	title.add_theme_font_size_override("font_size", 64)
 	title.add_theme_color_override("font_color", Color(0.93, 0.82, 0.60))
 	left.add_child(title)
 
 	var tag := Label.new()
-	tag.text = "EVERYONE HAS LEVERAGE ON YOU."
+	tag.text = tr("EVERYONE HAS LEVERAGE ON YOU.")
 	tag.add_theme_font_size_override("font_size", 14)
 	tag.add_theme_color_override("font_color", TEXT_DIM)
 	left.add_child(tag)
@@ -235,7 +235,7 @@ func _show_slots(save_mode: bool) -> void:
 	v.add_theme_constant_override("separation", 10)
 	p.add_child(v)
 	var h := Label.new()
-	h.text = "LOAD GAME" if not save_mode else "SAVE GAME"
+	h.text = tr("LOAD GAME") if not save_mode else "SAVE GAME"
 	h.add_theme_font_size_override("font_size", 22)
 	h.add_theme_color_override("font_color", GOLD)
 	v.add_child(h)
@@ -243,10 +243,10 @@ func _show_slots(save_mode: bool) -> void:
 		var info := Game.slot_info(i)
 		var b := _menu_button("")
 		if info.is_empty():
-			b.text = "SLOT %d — empty" % (i + 1)
+			b.text = tr("SLOT %d — empty") % (i + 1)
 			b.disabled = save_mode == false
 		else:
-			b.text = "SLOT %d — %s  ·  %s  ·  %s" % [i + 1, info["saved_at"], info["district"], _money(int(info["money"]))]
+			b.text = tr("SLOT %d — %s  ·  %s  ·  %s") % [i + 1, info["saved_at"], info["district"], _money(int(info["money"]))]
 		var slot := i
 		b.pressed.connect(func():
 			if save_mode:
@@ -259,7 +259,7 @@ func _show_slots(save_mode: bool) -> void:
 		v.add_child(b)
 	if save_mode:
 		var hint := Label.new()
-		hint.text = "Saving in the world is also available from the pause menu."
+		hint.text = tr("Saving in the world is also available from the pause menu.")
 		hint.add_theme_font_size_override("font_size", 12)
 		hint.add_theme_color_override("font_color", TEXT_DIM)
 		v.add_child(hint)
@@ -275,7 +275,7 @@ func _show_settings() -> void:
 	v.add_theme_constant_override("separation", 12)
 	p.add_child(v)
 	var h := Label.new()
-	h.text = "SETTINGS"
+	h.text = tr("SETTINGS")
 	h.add_theme_font_size_override("font_size", 22)
 	h.add_theme_color_override("font_color", GOLD)
 	v.add_child(h)
@@ -321,39 +321,56 @@ func _show_credits() -> void:
 	v.add_theme_constant_override("separation", 8)
 	scroll.add_child(v)
 	var credits := """
-LEVERAGE — Everyone has leverage on you.
+LEVERAGE
+"Everybody has something on you."
 
-A D'Youngs Games production. Built in Godot 4.7.
+A D'Youngs Games production. Built in Godot 4.7.2.
 
 DESIGN & CODE
-Game design, systems programming, world generation and UI built
-for this project. All gameplay code is original to LEVERAGE.
+Game design, systems programming, procedural world generation,
+UI, AI and all gameplay code are original to LEVERAGE.
+Copyright (c) 2026 D'Youngs Games. All rights reserved.
 
-3D CHARACTERS
-Quaternius — Universal Animated Character Pack (CC0).
-Rigged, animated humanoids with a shared skeleton.
+CHARACTER MODELS
+Soldier, Michelle and Xbot from the three.js examples collection.
+Copyright (c) 2010-2026 three.js authors. MIT Licence.
+Retargeted and re-materialled for this project.
 
-ARCHITECTURE & PROPS
-Kenney — City Kit Suburban, City Kit Commercial, City Kit Roads,
-Car Kit, Survival Kit, Furniture Kit (all CC0).
+ANIMATION
+Motion capture clips from Mixamo (Adobe), retargeted from the
+mixamorig skeleton and baked to the project rig.
+
+VEHICLES & PROPS
+Kenney Car Kit. CC0 public domain.
+
+SURFACES
+Poly Haven 1K texture sets. CC0 public domain.
 
 AUDIO
-Every sound effect, music loop and ambience bed in LEVERAGE was
-synthesized from first principles for this project (tools/gen_audio.py).
-No third-party samples are used anywhere in the game, so the entire
-audio set carries no licensing obligations.
+Every sound effect, music loop and ambience bed was synthesized
+from first principles for this project (tools/gen_audio.py).
+No third-party samples are used, so the audio set carries no
+licensing obligations.
 
 FONTS
 Godot default theme fonts (open licence).
 
 TOOLS
-Godot Engine 4.7.2 — MIT licence.
+Godot Engine 4.7.2 - MIT Licence.
+Copyright (c) 2014-2026 Juan Linietsky, Ariel Manzur and the
+Godot Engine contributors.
 glTF Transform + meshoptimizer for asset normalisation.
+
+ENGINE NOTICE
+Permission is hereby granted, free of charge, to any person
+obtaining a copy of the Godot Engine software and associated
+documentation files, to deal in the Software without
+restriction, subject to inclusion of this notice.
 
 SPECIAL THANKS
 Everyone who ever said "just ship it".
 
-© 2026 D'Youngs Games.
+(c) 2026 D'Youngs Games.
 """
 	var l := Label.new()
 	l.text = credits
@@ -362,12 +379,8 @@ Everyone who ever said "just ship it".
 	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	l.custom_minimum_size = Vector2(690, 0)
 	v.add_child(l)
-	var back := _menu_button("BACK")
-	back.pressed.connect(func(): _clear_panel())
-	v.pressed.connect(func(): pass)
-	add_child(v) if false else null
-	# back button lives outside the scroll so it is always reachable
-	var back2 := _menu_button("BACK")
+	# Back button lives outside the scroll so it is always reachable.
+	var back2 := _menu_button(tr("BACK"))
 	back2.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
 	back2.position = Vector2(-260, -90)
 	back2.custom_minimum_size = Vector2(200, 0)

@@ -86,7 +86,9 @@ func setup(w: Node3D) -> void:
 	_build()
 
 func _ready() -> void:
-	pass
+	if not PlatformUI.settings_changed.is_connected(_on_settings_changed):
+		PlatformUI.settings_changed.connect(_on_settings_changed)
+	_on_settings_changed()
 
 # ============================================================== construction
 func _build() -> void:
@@ -200,9 +202,9 @@ func _build_status() -> void:
 	var dv := VBoxContainer.new()
 	dv.add_theme_constant_override("separation", 0)
 	dist_panel.add_child(dv)
-	district_label = _label("ASH ROW", 21, GOLD)
+	district_label = _label(tr("ASH ROW"), 21, GOLD)
 	dv.add_child(district_label)
-	clock_label = _label("16:30 · CLEAR · 18°", 12, TEXT_DIM)
+	clock_label = _label(tr("16:30 · CLEAR · 18°"), 12, TEXT_DIM)
 	dv.add_child(clock_label)
 
 	# health / stamina bars
@@ -244,7 +246,7 @@ func _build_status() -> void:
 	money_label = _label("₦120", 26, Color(0.86, 0.94, 0.80))
 	money_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	mh.add_child(money_label)
-	discipline_label = _label("BRAWLER", 11, GOLD_DIM)
+	discipline_label = _label(tr("BRAWLER"), 11, GOLD_DIM)
 	discipline_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	mh.add_child(discipline_label)
 
@@ -253,7 +255,7 @@ func _build_status() -> void:
 	var hv := VBoxContainer.new()
 	hv.add_theme_constant_override("separation", 4)
 	heat_panel.add_child(hv)
-	var hl := _label("HEAT", 10, TEXT_DIM)
+	var hl := _label(tr("HEAT"), 10, TEXT_DIM)
 	hv.add_child(hl)
 	heat_bar = _bar(DANGER, 8)
 	heat_bar.max_value = 100.0
@@ -268,7 +270,7 @@ func _build_status() -> void:
 	var sp2 := Control.new()
 	sp2.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	gear_row.add_child(sp2)
-	weapon_label = _label("FISTS", 11, TEXT_DIM)
+	weapon_label = _label(tr("FISTS"), 11, TEXT_DIM)
 	weapon_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	gear_row.add_child(weapon_label)
 	ammo_label = _label("", 11, GOLD_DIM)
@@ -285,13 +287,52 @@ func _build_mission() -> void:
 	var mv := VBoxContainer.new()
 	mv.add_theme_constant_override("separation", 2)
 	mission_box.add_child(mv)
-	mission_title = _label("HOMECOMING", 16, GOLD)
+	mission_title = _label(tr("HOMECOMING"), 16, GOLD)
 	mv.add_child(mission_title)
-	mission_obj = _label("Walk to Mama Ngozi's Kitchen", 13, TEXT)
+	mission_obj = _label(tr("Walk to Mama Ngozi's Kitchen"), 13, TEXT)
 	mission_obj.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	mv.add_child(mission_obj)
 
 # ---------------------------------------------------------------- compass
+## Offers the unstick options. Deliberately two taps: "I'm good" resumes,
+## "Get me out" relocates without touching money, flags or progress.
+func show_rescue_prompt(reason: String) -> void:
+	if _rescue_open: return
+	_rescue_open = true
+	var ov := _fullscreen_overlay()
+	ov.visible = true
+	var col := VBoxContainer.new()
+	col.set_anchors_preset(Control.PRESET_CENTER)
+	col.position = Vector2(-220, -110)
+	col.custom_minimum_size = Vector2(440, 0)
+	ov.add_child(col)
+	col.add_child(_label(tr("STUCK?"), 28, GOLD))
+	col.add_child(_label(reason, 14, TEXT_DIM))
+	col.add_child(_label(tr("You will not lose money, items or progress."), 12, TEXT_DIM))
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 10)
+	col.add_child(row)
+	var b1 := _btn(tr("I'M FINE"), 15)
+	b1.pressed.connect(func():
+		_rescue_open = false
+		ov.queue_free())
+	var b2 := _btn(tr("GET ME OUT"), 15)
+	b2.pressed.connect(func():
+		_rescue_open = false
+		ov.queue_free()
+		if world != null and world.rescue_system != null:
+			world.rescue_system.unstick())
+	row.add_child(b1)
+	row.add_child(b2)
+
+var _rescue_open := false
+var _combat_anchor: Control = null
+
+func _on_settings_changed() -> void:
+	_place_combat_cluster()
+	if minimap != null and minimap.has_method("apply_accessibility"):
+		minimap.apply_accessibility()
+
 func _build_minimap() -> void:
 	minimap = MINIMAP.new()
 	minimap.set_anchors_preset(Control.PRESET_TOP_LEFT)
@@ -408,11 +449,10 @@ func _build_combat_buttons() -> void:
 	# The required diamond: X punch (top-left), Y heavy (top-right),
 	# A kick (bottom-right), B dodge/interact (bottom-left).
 	var anchor := Control.new()
-	anchor.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
-	anchor.position = Vector2(-352, -300)
-	anchor.custom_minimum_size = Vector2(330, 285)
 	anchor.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_combat_anchor = anchor
 	root.add_child(anchor)
+	_place_combat_cluster()
 
 	btn_x = _action_button("X", Color(0.62, 0.30, 0.24), Vector2(6, 62))
 	btn_y = _action_button("Y", Color(0.62, 0.52, 0.22), Vector2(126, 24))
@@ -420,6 +460,21 @@ func _build_combat_buttons() -> void:
 	btn_b = _action_button("B", Color(0.24, 0.34, 0.56), Vector2(56, 168))
 	for b in [btn_x, btn_y, btn_a, btn_b]:
 		anchor.add_child(b)
+
+## Keeps the diamond clear of the home-indicator swipe band and mirrors it to
+## the left thumb when the player asks for one-hand mode.
+func _place_combat_cluster() -> void:
+	if _combat_anchor == null: return
+	var floor_pad: float = PlatformUI.action_floor()
+	var scale: float = PlatformUI.touch_scale
+	if PlatformUI.one_hand_left:
+		_combat_anchor.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
+		_combat_anchor.position = Vector2(22 + PlatformUI.safe_left, -(300 + floor_pad))
+	else:
+		_combat_anchor.set_anchors_preset(Control.PRESET_BOTTOM_RIGHT)
+		_combat_anchor.position = Vector2(-(352 + PlatformUI.safe_right), -(300 + floor_pad))
+	_combat_anchor.custom_minimum_size = Vector2(330, 285) * scale
+	_combat_anchor.scale = Vector2(scale, scale)
 
 func _action_button(label_text: String, tint: Color, pos: Vector2) -> Button:
 	var b := Button.new()
@@ -547,7 +602,7 @@ func _build_prompts() -> void:
 	interact_panel.custom_minimum_size = Vector2(300, 0)
 	interact_panel.visible = false
 	root.add_child(interact_panel)
-	interact_label = _label("Talk", 15, GOLD)
+	interact_label = _label(tr("Talk"), 15, GOLD)
 	interact_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	interact_panel.add_child(interact_label)
 
@@ -569,7 +624,7 @@ func _build_prompts() -> void:
 	var dvv := VBoxContainer.new()
 	dvv.add_theme_constant_override("separation", 4)
 	dialogue_panel.add_child(dvv)
-	dialogue_name = _label("MAMA NGOZI", 15, GOLD)
+	dialogue_name = _label(tr("MAMA NGOZI"), 15, GOLD)
 	dvv.add_child(dialogue_name)
 	dialogue_text = _label("", 14, TEXT)
 	dialogue_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -596,7 +651,7 @@ func _build_prompts() -> void:
 	var ov := VBoxContainer.new()
 	ov.add_theme_constant_override("separation", 8)
 	_offer_panel.add_child(ov)
-	var otitle := _label("NEW JOB AVAILABLE", 12, GOLD_DIM)
+	var otitle := _label(tr("NEW JOB AVAILABLE"), 12, GOLD_DIM)
 	ov.add_child(otitle)
 	var obody := _label("", 15, TEXT)
 	obody.name = "Body"
@@ -641,7 +696,7 @@ func set_clock(hour: float, weather: String, temp: int) -> void:
 	if clock_label == null: return
 	var h := int(hour)
 	var m := int((hour - float(h)) * 60.0)
-	clock_label.text = "%02d:%02d · %s · %d°" % [h, m, weather.to_upper(), temp]
+	clock_label.text = tr("%02d:%02d · %s · %d°") % [h, m, weather.to_upper(), temp]
 
 func set_interact_prompt(text: String, _kind: String) -> void:
 	if interact_panel == null: return
@@ -732,7 +787,7 @@ func _build_menu() -> void:
 	center.custom_minimum_size = Vector2(320, 0)
 	center.add_theme_constant_override("separation", 10)
 	_menu.add_child(center)
-	var title := _label("PAUSED", 30, GOLD)
+	var title := _label(tr("PAUSED"), 30, GOLD)
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	center.add_child(title)
 	for pair in [
@@ -741,6 +796,7 @@ func _build_menu() -> void:
 		["LOAD GAME", func(): Game.load_game(0); toggle_menu()],
 		["SETTINGS", func(): world.hud_show_settings()],
 		["MISSION LOG", func(): world.hud_show_log()],
+		["GET UNSTUCK", func(): toggle_menu(); show_rescue_prompt(tr("Requested from the pause menu."))],
 		["QUIT TO MENU", func(): Loader.goto_menu()],
 	]:
 		var b := _btn(pair[0], 15)
@@ -776,7 +832,7 @@ func _build_shop() -> void:
 	var v := VBoxContainer.new()
 	v.add_theme_constant_override("separation", 8)
 	p.add_child(v)
-	shop_title = _label("SHOP", 24, GOLD)
+	shop_title = _label(tr("SHOP"), 24, GOLD)
 	v.add_child(shop_title)
 	var scroll := ScrollContainer.new()
 	scroll.custom_minimum_size = Vector2(690, 380)
@@ -909,7 +965,7 @@ func hud_show_settings() -> void:
 	var v := VBoxContainer.new()
 	v.add_theme_constant_override("separation", 10)
 	p.add_child(v)
-	v.add_child(_label("SETTINGS", 22, GOLD))
+	v.add_child(_label(tr("SETTINGS"), 22, GOLD))
 	for pair in [["Master", "master_volume"], ["Music", "music_volume"], ["SFX", "sfx_volume"]]:
 		var row := HBoxContainer.new()
 		row.add_theme_constant_override("separation", 10)
@@ -929,7 +985,26 @@ func hud_show_settings() -> void:
 		)
 		row.add_child(slider)
 		v.add_child(row)
-	var back := _btn("BACK", 14)
+	v.add_child(_label(tr("ACCESSIBILITY"), 14, GOLD))
+	for tgl in [
+		[tr("High-contrast markers"), "high_contrast_blips"],
+		[tr("Left-handed layout"), "one_hand_left"],
+		[tr("Invert camera Y"), "camera_invert_y"],
+		[tr("Hold for heavy attack"), "hold_to_heavy"],
+	]:
+		var b := _btn(tgl[0], 14)
+		b.toggle_mode = true
+		b.button_pressed = bool(PlatformUI.get(tgl[1]))
+		var prop2: String = tgl[1]
+		var btn_ref := b
+		b.toggled.connect(func(on: bool):
+			PlatformUI.set(prop2, on)
+			PlatformUI.save_settings()
+			btn_ref.text = ("■ " if on else "□ ") + str(tgl[0])
+		)
+		b.text = ("■ " if b.button_pressed else "□ ") + str(tgl[0])
+		v.add_child(b)
+	var back := _btn(tr("BACK"), 14)
 	back.pressed.connect(func(): overlay.queue_free())
 	v.add_child(back)
 
@@ -943,15 +1018,15 @@ func hud_show_log() -> void:
 	var v := VBoxContainer.new()
 	v.add_theme_constant_override("separation", 8)
 	p.add_child(v)
-	v.add_child(_label("MISSION LOG", 22, GOLD))
-	v.add_child(_label("Completed: %d" % Game.completed_missions.size(), 13, TEXT_DIM))
+	v.add_child(_label(tr("MISSION LOG"), 22, GOLD))
+	v.add_child(_label(tr("Completed: %d") % Game.completed_missions.size(), 13, TEXT_DIM))
 	for id in Game.completed_missions:
 		var m: Dictionary = Content.MISSIONS.get(id, {})
 		v.add_child(_label("✓ " + str(m.get("title", id)), 13, Color(0.6, 0.85, 0.6)))
 	var next := Game.next_available_mission()
 	if next != "":
 		var m2: Dictionary = Content.MISSIONS[next]
-		v.add_child(_label("NEXT: " + str(m2["title"]), 14, GOLD))
+		v.add_child(_label(tr("NEXT: ") + str(m2["title"]), 14, GOLD))
 		var b := _label(str(m2.get("brief", "")), 12, TEXT_DIM)
 		b.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		b.custom_minimum_size = Vector2(600, 0)
@@ -1005,7 +1080,7 @@ func _process(delta: float) -> void:
 	# Keep the touch diamond readable: combat faces dim outside combat.
 	if world.player.combat != null:
 		var fighting: bool = world.player.combat.in_combat
-		btn_b.text = "B" if fighting else "B"
+		btn_b.text = tr("B") if fighting else "B"
 		btn_b.modulate.a = 1.0 if fighting else 0.86
 
 func _thousands(n: int) -> String:

@@ -59,6 +59,8 @@ func _ready() -> void:
 	hud.set_district(Content.district_name(Game.current_district))
 	_wire_phone()
 	_wire_gps()
+	_wire_rescue()
+	_wire_dialogue()
 	world_streamer.setup(self, districts)
 	traffic.setup(self, districts)
 	npcs.setup(self, districts)
@@ -106,8 +108,46 @@ func _update_district() -> void:
 		hud.set_district(Content.district_name(best))
 		Events.record("district_enter", {"district": best})
 
+## Unstick safety net.
+var rescue_system: Node = null
+
+func _wire_rescue() -> void:
+	rescue_system = load("res://scripts/systems/rescue.gd").new()
+	rescue_system.name = "Rescue"
+	add_child(rescue_system)
+	rescue_system.setup(self)
+	rescue_system.offer_rescue.connect(_on_rescue_offer)
+
+func _on_rescue_offer(reason: String) -> void:
+	if hud != null:
+		hud.show_rescue_prompt(reason)
+
 ## On-road navigation ribbon.
 var gps_line: Node3D = null
+
+## Story surfaces. With no voice acting, this box carries every scene, so it
+## lives in the world rather than in a mission script and survives a reload.
+var dialogue: Control = null
+
+func _wire_dialogue() -> void:
+	var layer := CanvasLayer.new()
+	layer.layer = 6
+	add_child(layer)
+	dialogue = load("res://scripts/ui/dialogue_box.gd").new()
+	layer.add_child(dialogue)
+
+## Play a run of lines. Each: {speaker, text, color}
+func say(lines: Array) -> void:
+	if dialogue != null:
+		dialogue.play(lines)
+
+## Branch point. Returns the chosen index via the signal on `dialogue`.
+func ask(question: Dictionary, choices: Array) -> void:
+	if dialogue != null:
+		dialogue.ask(question, choices)
+
+func dialogue_active() -> bool:
+	return dialogue != null and dialogue.is_active()
 
 func _wire_gps() -> void:
 	gps_line = load("res://scripts/ui/gps_line.gd").new()
