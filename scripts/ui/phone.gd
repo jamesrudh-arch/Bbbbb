@@ -179,6 +179,7 @@ func show_home() -> void:
 	row.add_child(_btn("RADIO", func(): _cycle_radio()))
 	_root.add_child(row)
 	_root.add_child(_btn(tr("JOBS"), func(): _open_job_board()))
+	_root.add_child(_btn(tr("DUEL"), func(): _open_duel()))
 	_root.add_child(_sep())
 	var recent: Array = Game.call_log.slice(maxi(0, Game.call_log.size() - 3))
 	if not recent.is_empty():
@@ -192,6 +193,19 @@ func show_home() -> void:
 		_root.add_child(_sub(tr("%d unread message%s") % [unread, "" if unread == 1 else "s"]))
 	_root.add_child(_spacer())
 	_root.add_child(_btn("PUT AWAY", func(): _close()))
+
+## 1v1 split-screen duel. Local, free, no server.
+func _open_duel() -> void:
+	if world == null or world.duel == null:
+		return
+	var sel = load("res://scripts/ui/duel_select.gd").new()
+	sel.fight_requested.connect(func(d1, d2):
+		_close()
+		world.start_duel(d1, d2))
+	sel.closed.connect(func():
+		sel.queue_free()
+		show_home())
+	world.hud.add_child(sel)
 
 ## The job board lives on the phone: work comes to you, you don't walk to it.
 func _open_job_board() -> void:

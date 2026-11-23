@@ -26,6 +26,11 @@ var move_dir := Vector3.ZERO
 var is_sprinting := false
 var is_crouching := false
 var is_dead := false
+# Health is per-instance, not global. It was previously only on Game, which
+# meant two players in a duel shared one health pool and neither could be KO'd.
+var health: float = 100.0
+var max_health: float = 100.0
+var duel_mode := false
 var vehicle = null
 var can_move := true
 
@@ -91,6 +96,10 @@ func _district_center(id: String) -> Vector3:
 
 func _physics_process(delta: float) -> void:
 	if is_dead: return
+	if not duel_mode:
+		# Story play keeps Game as the authority; the instance mirrors it.
+		health = Game.player_health
+		max_health = Game.player_max_health
 	if vehicle != null:
 		return
 	if not is_on_floor():

@@ -1,12 +1,12 @@
 LEVERAGE TEST REPORT
-2026-11-23T16:06:29
+2026-11-23T16:15:17
 
 PASS  content.districts==7  7
 PASS  districts have palettes+landmarks
 PASS  content.characters==16  16
 PASS  every character has a real model file
 PASS  content.missions==8  8
-PASS  content.disciplines==5
+PASS  content.disciplines==6  6
 PASS  discipline keys match spec
 PASS  content.weapons>=7  7
 PASS  content.vehicles>=8  8
@@ -67,7 +67,7 @@ PASS  armor equipped
 PASS  armor gives protection
 PASS  cannot buy without money
 PASS  heat raises wanted level  2
-PASS  all 5 disciplines have distinct stat signatures  5
+PASS  all 6 disciplines have distinct stat signatures  6
 PASS  brawler shortest reach but full damage
 PASS  grappling highest damage
 PASS  weapon longest reach
@@ -100,7 +100,7 @@ PASS  subtitle scale default
 PASS  camera sensitivity default
 PASS  Crash autoload present
 PASS  rescue script loads
-PASS  crash log written  8534 bytes
+PASS  crash log written  9150 bytes
 PASS  archetype roster at least 24  25 defined
 PASS  bosses exist alongside the regular roster  3 bosses
 PASS  roster covers street, ring and corporate
@@ -172,8 +172,17 @@ PASS  adaptive responds to losing  loss -0.90 < win 0.45
 PASS  difficulty does NOT inflate health  1.15x
 PASS  squad size scales with threat  4 vs 3
 PASS  squads stay small  4
+PASS  six duel disciplines  6
+PASS  silat is present  ["brawler", "kickboxing", "grappling", "drunken", "weapon", "silat"]
+PASS  every discipline has an identity  0 missing
+PASS  content has six disciplines  6
+PASS  silat in content
+PASS  per-fighter health is independent  p1 100 p2 40
+PASS  player has its own health field
+PASS  best of three  2 wins
+PASS  timed rounds  60s
 PASS  world instantiated
-PASS  world build under 60s  1419 ms
+PASS  world build under 60s  1251 ms
 PASS  seven districts built  7
 PASS  districts populated  8993 objects
 PASS  sidewalk nav graph per district
@@ -202,4 +211,4 @@ PASS  side job starts with job_ prefix
 PASS  job completes into completed_jobs
 PASS  job unlocks a discipline reward  ["brawler", "kickboxing"]
 
-PASSED: 200   FAILED: 0   TOTAL: 200
+PASSED: 209   FAILED: 0   TOTAL: 209

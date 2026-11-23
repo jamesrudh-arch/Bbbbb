@@ -268,5 +268,11 @@ func notify_attacked(attacker: Node3D, amount: float = 6.5) -> void:
 		StyleRank.on_player_hit()
 	if world_ref() != null and world_ref().difficulty != null:
 		world_ref().difficulty.note_player_hit()
-	Game.damage(dmg, "combat")
+	if player != null and player.get("duel_mode") == true:
+		# Duel: damage the fighter instance so each side has its own pool.
+		player.set("health", maxf(0.0, float(player.get("health")) - dmg))
+		if float(player.get("health")) <= 0.0:
+			player.set("is_dead", true)
+	else:
+		Game.damage(dmg, "combat")
 	if player.camera_rig: player.camera_rig.shake(0.45)

@@ -140,10 +140,12 @@ func _library_for(glb_name: String) -> AnimationLibrary:
 func _verify_binding() -> void:
 	if anim_player == null:
 		return
-	var anim := anim_player.get_animation(anim_player.current_animation if anim_player.current_animation != "" else "")
-	var probe := "mocap/idle"
-	if anim_player.has_animation(probe):
-		anim = anim_player.get_animation(probe)
+	var anim: Animation = null
+	# Prefer idle; fall back to whatever is playing. Never call get_animation("").
+	if anim_player.has_animation("mocap/idle"):
+		anim = anim_player.get_animation("mocap/idle")
+	elif anim_player.current_animation != "":
+		anim = anim_player.get_animation(anim_player.current_animation)
 	if anim == null or anim.get_track_count() == 0:
 		return
 	# Track paths resolve relative to root_node, NOT relative to the player.

@@ -64,6 +64,7 @@ func _ready() -> void:
 	_wire_conversation()
 	_wire_content_engine()
 	_wire_difficulty()
+	_wire_duel()
 	world_streamer.setup(self, districts)
 	traffic.setup(self, districts)
 	npcs.setup(self, districts)
@@ -148,6 +149,29 @@ func say(lines: Array) -> void:
 func ask(question: Dictionary, choices: Array) -> void:
 	if dialogue != null:
 		dialogue.ask(question, choices)
+
+## 1v1 split-screen duels. Local only: no server, no running cost.
+var duel: Node = null
+var split_view: Node = null
+
+func _wire_duel() -> void:
+	duel = load("res://scripts/systems/duel.gd").new()
+	duel.name = "Duel"
+	add_child(duel)
+	split_view = load("res://scripts/systems/split_view.gd").new()
+	split_view.name = "SplitView"
+	add_child(split_view)
+	split_view.setup(self)
+	duel.duel_ended.connect(func(_w, _s): split_view.disengage())
+
+## Start a duel between two disciplines. Returns false if one is already running.
+func start_duel(d1: String, d2: String) -> bool:
+	var center: Vector3 = builder.district_center(str(Game.current_district))
+	if not duel.begin(self, d1, d2, center):
+		return false
+	if duel._p2 != null:
+		split_view.engage(duel._p1, duel._p2)
+	return true
 
 ## The five difficulty axes and the thing that spawns content into the world.
 var difficulty: Node = null

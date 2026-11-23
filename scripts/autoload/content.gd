@@ -224,6 +224,13 @@ const DISCIPLINES := {
 		"identity": "Highest reach and damage; heavy heat penalty when seen.",
 		"unlock": "",
 	},
+	"silat": {
+		"name": "Silat", "reach": 2.15, "damage": 0.92, "speed": 1.12, "stamina": 0.92,
+		"desc": "Angular footwork, joint locks off the counter. Punishes committed attackers.",
+		"heavy": "Elbow through the guard into a shoulder throw", "kick": "Sapu sweeping kick that breaks their base",
+		"identity": "Best counter-window in the game. Weak if you attack first.",
+		"unlock": "ring_bout_12",
+	},
 }
 
 # ============================================================ WEAPONS

@@ -23,7 +23,7 @@ func _ready() -> void:
 
 func _run() -> void:
 	print("\n=========== LEVERAGE TEST SUITE ===========")
-	for step in ["content", "input", "save_load", "economy", "combat", "audio", "scenes", "migration", "a11y", "archetypes", "ai", "style", "impact", "conversation", "content_engine", "difficulty"]:
+	for step in ["content", "input", "save_load", "economy", "combat", "audio", "scenes", "migration", "a11y", "archetypes", "ai", "style", "impact", "conversation", "content_engine", "difficulty", "duel"]:
 		print("  [step] ", step)
 		match step:
 			"content": _test_content()
@@ -42,6 +42,7 @@ func _run() -> void:
 			"conversation": _test_conversation()
 			"content_engine": _test_content_engine()
 			"difficulty": _test_difficulty()
+			"duel": _test_duel()
 	print("  [step] world")
 	await _test_world()
 	print("  [step] missions")
@@ -67,7 +68,7 @@ func _test_content() -> void:
 			results.append("      missing model for " + cid + ": " + m)
 	_ok("every character has a real model file", models_ok)
 	_ok("content.missions==8", Content.MISSIONS.size() == 8, str(Content.MISSIONS.size()))
-	_ok("content.disciplines==5", Content.DISCIPLINES.size() == 5)
+	_ok("content.disciplines==6", Content.DISCIPLINES.size() == 6, "%d" % Content.DISCIPLINES.size())
 	_ok("discipline keys match spec", Content.DISCIPLINES.has("brawler") and Content.DISCIPLINES.has("kickboxing") and Content.DISCIPLINES.has("grappling") and Content.DISCIPLINES.has("drunken") and Content.DISCIPLINES.has("weapon"))
 	_ok("content.weapons>=7", Content.WEAPONS.size() >= 7, str(Content.WEAPONS.size()))
 	_ok("content.vehicles>=8", Content.VEHICLE_TYPES.size() >= 8, str(Content.VEHICLE_TYPES.size()))
@@ -159,7 +160,7 @@ func _test_combat_math() -> void:
 		var d: Dictionary = Content.DISCIPLINES[did]
 		var sig := "%.2f_%.2f_%.2f" % [d["reach"], d["damage"], d["speed"]]
 		seen[sig] = true
-	_ok("all 5 disciplines have distinct stat signatures", seen.size() == 5, str(seen.size()))
+	_ok("all 6 disciplines have distinct stat signatures", seen.size() == 6, str(seen.size()))
 	_ok("brawler shortest reach but full damage", Content.DISCIPLINES["brawler"]["reach"] < Content.DISCIPLINES["kickboxing"]["reach"])
 	_ok("grappling highest damage", Content.DISCIPLINES["grappling"]["damage"] > Content.DISCIPLINES["kickboxing"]["damage"])
 	_ok("weapon longest reach", Content.DISCIPLINES["weapon"]["reach"] == 3.0)
@@ -633,7 +634,55 @@ func _test_content_engine() -> void:
 		"range %d..%d" % [tiers[0], tiers[-1]])
 	_ok("district tiers are not all easy", tiers[-1] >= 5, "max %d" % tiers[-1])
 
-	e.queue_free()
+## Statics only: the full duel lifecycle needs a live world and is covered by
+## dev_dueltest.tscn. What matters here is that the mode is coherent: six
+## disciplines, distinct identities, and per-fighter health rather than a shared
+## global pool.
+func _test_duel() -> void:
+	var d = load("res://scripts/systems/duel.gd").new()
+	add_child(d)
+
+	var discs: Array = d.discipline_list()
+	_ok("six duel disciplines", discs.size() == 6, "%d" % discs.size())
+
+	# Silat must exist as the sixth discipline the freeze specifies.
+	var keys := []
+	for x in discs:
+		keys.append(str(x["key"]))
+	_ok("silat is present", keys.has("silat"), str(keys))
+
+	# Every discipline must have an identity line, or the select screen is empty.
+	var missing := 0
+	for x in discs:
+		if str(x.get("identity", "")).strip_edges() == "":
+			missing += 1
+	_ok("every discipline has an identity", missing == 0, "%d missing" % missing)
+
+	# The sixth discipline must also exist in content, not only in the duel file.
+	_ok("content has six disciplines", Content.DISCIPLINES.size() >= 6,
+		"%d" % Content.DISCIPLINES.size())
+	_ok("silat in content", Content.DISCIPLINES.has("silat"))
+
+	# Two fighters must be able to hold different health. This was broken: health
+	# lived only on Game, so a duel had one shared pool and neither side could be
+	# knocked out.
+	var p1 = load("res://scenes/player.tscn").instantiate()
+	var p2 = load("res://scenes/player.tscn").instantiate()
+	add_child(p1)
+	add_child(p2)
+	p1.set("health", 100.0)
+	p2.set("health", 40.0)
+	_ok("per-fighter health is independent", int(p1.get("health")) == 100 and int(p2.get("health")) == 40,
+		"p1 %d p2 %d" % [int(p1.get("health")), int(p2.get("health"))])
+	_ok("player has its own health field", p1.get("health") != null)
+	p1.queue_free()
+	p2.queue_free()
+
+	# Round rules from the freeze.
+	_ok("best of three", d.ROUNDS_TO_WIN == 2, "%d wins" % d.ROUNDS_TO_WIN)
+	_ok("timed rounds", d.ROUND_TIME > 0.0, "%.0fs" % d.ROUND_TIME)
+
+	d.queue_free()
 
 ## The five axes must ascend, stay bounded, and — the rule that governs the whole
 ## design — must never make enemies tankier.
