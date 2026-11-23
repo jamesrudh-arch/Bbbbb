@@ -1,0 +1,111 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="900" viewBox="0 0 1400 900">
+<defs>
+  <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%" stop-color="#0a0c10"/><stop offset="100%" stop-color="#11151b"/>
+  </linearGradient>
+  <filter id="glow"><feGaussianBlur stdDeviation="6" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+</defs>
+<rect width="1400" height="900" fill="url(#bg)"/>
+
+<text x="60" y="62" fill="#e8b64c" font-family="Helvetica,Arial" font-size="26" font-weight="bold" letter-spacing="6">LEVERAGE</text>
+<text x="60" y="92" fill="#5c6674" font-family="Helvetica,Arial" font-size="13" letter-spacing="3">CINDER CITY — CONTENT MAP</text>
+
+<!-- district grid: 3 cols x 3 rows-ish -->
+<!-- Row 0: Ash Row, Guttermarket, Iron Yard -->
+<g>
+  <rect x="60" y="130" width="400" height="200" rx="4" fill="#1a1512" stroke="#8a6a3a" stroke-width="1.5"/>
+  <text x="80" y="162" fill="#d9a441" font-family="Helvetica,Arial" font-size="19" font-weight="bold">ASH ROW</text>
+  <text x="80" y="184" fill="#7a6a58" font-family="Helvetica,Arial" font-size="11" letter-spacing="2">RESIDENTIAL · TIER 1</text>
+  <text x="80" y="212" fill="#9aa4b0" font-family="Helvetica,Arial" font-size="12">Marcus's home. Family. Ngozi's Kitchen.</text>
+  <text x="80" y="232" fill="#9aa4b0" font-family="Helvetica,Arial" font-size="12">Safest district. Cops know your mother.</text>
+  <line x1="80" y1="250" x2="440" y2="250" stroke="#2c3138"/>
+  <text x="80" y="272" fill="#6b7684" font-family="Helvetica,Arial" font-size="11">FIGHT VENUE · The Basement</text>
+  <text x="80" y="292" fill="#6b7684" font-family="Helvetica,Arial" font-size="11">BOUNTIES · 3</text>
+  <text x="80" y="312" fill="#6b7684" font-family="Helvetica,Arial" font-size="11">SAFEHOUSE · Block 14</text>
+</g>
+<g>
+  <rect x="490" y="130" width="400" height="200" rx="4" fill="#141a16" stroke="#4a7a52" stroke-width="1.5"/>
+  <text x="510" y="162" fill="#6fc47f" font-family="Helvetica,Arial" font-size="19" font-weight="bold">GUTTERMARKET</text>
+  <text x="510" y="184" fill="#5f7a64" font-family="Helvetica,Arial" font-size="11" letter-spacing="2">COMMERCIAL · TIER 1</text>
+  <text x="510" y="212" fill="#9aa4b0" font-family="Helvetica,Arial" font-size="12">Dense stalls, awnings, open drains.</text>
+  <text x="510" y="232" fill="#9aa4b0" font-family="Helvetica,Arial" font-size="12">Crowd density 3×. Best place to vanish.</text>
+  <line x1="510" y1="250" x2="870" y2="250" stroke="#2c3138"/>
+  <text x="510" y="272" fill="#6b7684" font-family="Helvetica,Arial" font-size="11">FIGHT VENUE · The Long Table</text>
+  <text x="510" y="292" fill="#6b7684" font-family="Helvetica,Arial" font-size="11">BOUNTIES · 3 · Pickpocket events</text>
+  <text x="510" y="312" fill="#6b7684" font-family="Helvetica,Arial" font-size="11">CONTRACT HUB · Sunday Market</text>
+</g>
+<g>
+  <rect x="920" y="130" width="400" height="200" rx="4" fill="#1a1614" stroke="#8a5a3a" stroke-width="1.5"/>
+  <text x="940" y="162" fill="#d98a4a" font-family="Helvetica,Arial" font-size="19" font-weight="bold">IRON YARD</text>
+  <text x="940" y="184" fill="#8a6a58" font-family="Helvetica,Arial" font-size="11" letter-spacing="2">INDUSTRIAL · TIER 2</text>
+  <text x="940" y="212" fill="#9aa4b0" font-family="Helvetica,Arial" font-size="12">Sheds, containers, cranes, chain-link.</text>
+  <text x="940" y="232" fill="#9aa4b0" font-family="Helvetica,Arial" font-size="12">Crafting. Weapon mods. Arena fights.</text>
+  <line x1="940" y1="250" x2="1300" y2="250" stroke="#2c3138"/>
+  <text x="940" y="272" fill="#6b7684" font-family="Helvetica,Arial" font-size="11">FIGHT VENUE · Crucible (3v1)</text>
+  <text x="940" y="292" fill="#6b7684" font-family="Helvetica,Arial" font-size="11">BOUNTIES · 3 · Weapon workspace</text>
+  <text x="940" y="312" fill="#6b7684" font-family="Helvetica,Arial" font-size="11">SAFEHOUSE · The Shed</text>
+</g>
+
+<!-- Row 1: Railhead, Vesper Heights, Neon Mile -->
+<g>
+  <rect x="60" y="350" width="400" height="200" rx="4" fill="#12161a" stroke="#3a6a8a" stroke-width="1.5"/>
+  <text x="80" y="382" fill="#5fa8d4" font-family="Helvetica,Arial" font-size="19" font-weight="bold">RAILHEAD</text>
+  <text x="80" y="404" fill="#58707a" font-family="Helvetica,Arial" font-size="11" letter-spacing="2">TRANSIT · TIER 2</text>
+  <text x="80" y="432" fill="#9aa4b0" font-family="Helvetica,Arial" font-size="12">Station halls, freight yards, signal towers.</text>
+  <text x="80" y="452" fill="#9aa4b0" font-family="Helvetica,Arial" font-size="12">Fast travel + smuggling runs.</text>
+  <line x1="80" y1="470" x2="440" y2="470" stroke="#2c3138"/>
+  <text x="80" y="492" fill="#6b7684" font-family="Helvetica,Arial" font-size="11">FIGHT VENUE · Platform 4 (90s)</text>
+  <text x="80" y="512" fill="#6b7684" font-family="Helvetica,Arial" font-size="11">BOUNTIES · 3 · Rail smuggling</text>
+  <text x="80" y="532" fill="#6b7684" font-family="Helvetica,Arial" font-size="11">STORY · Body found near platform</text>
+</g>
+<g>
+  <rect x="490" y="350" width="400" height="200" rx="4" fill="#14161e" stroke="#5a6aa8" stroke-width="1.5"/>
+  <text x="510" y="382" fill="#8098e0" font-family="Helvetica,Arial" font-size="19" font-weight="bold">VESPER HEIGHTS</text>
+  <text x="510" y="404" fill="#5a6478" font-family="Helvetica,Arial" font-size="11" letter-spacing="2">WEALTH · TIER 3</text>
+  <text x="510" y="432" fill="#9aa4b0" font-family="Helvetica,Arial" font-size="12">Towers, glass, private roads, quiet.</text>
+  <text x="510" y="452" fill="#9aa4b0" font-family="Helvetica,Arial" font-size="12">Heists. Security. The story's endgame.</text>
+  <line x1="510" y1="470" x2="870" y2="470" stroke="#2c3138"/>
+  <text x="510" y="492" fill="#6b7684" font-family="Helvetica,Arial" font-size="11">FIGHT VENUE · The Glass Room</text>
+  <text x="510" y="512" fill="#6b7684" font-family="Helvetica,Arial" font-size="11">BOUNTIES · 3 · Corporate heist</text>
+  <text x="510" y="532" fill="#6b7684" font-family="Helvetica,Arial" font-size="11">SAFEHOUSE · Serviced apartment</text>
+</g>
+<g>
+  <rect x="920" y="350" width="400" height="200" rx="4" fill="#1a1220" stroke="#a040a0" stroke-width="1.5"/>
+  <text x="940" y="382" fill="#e06ae0" font-family="Helvetica,Arial" font-size="19" font-weight="bold">NEON MILE</text>
+  <text x="940" y="404" fill="#7a5a7a" font-family="Helvetica,Arial" font-size="11" letter-spacing="2">NIGHTLIFE · TIER 3</text>
+  <text x="940" y="432" fill="#9aa4b0" font-family="Helvetica,Arial" font-size="12">Clubs, hotels, neon, wet asphalt.</text>
+  <text x="940" y="452" fill="#9aa4b0" font-family="Helvetica,Arial" font-size="12">Gambling. Highest heat in the city.</text>
+  <line x1="940" y1="470" x2="1300" y2="470" stroke="#2c3138"/>
+  <text x="940" y="492" fill="#6b7684" font-family="Helvetica,Arial" font-size="11">FIGHT VENUE · Velvet Pit (2× rank)</text>
+  <text x="940" y="512" fill="#6b7684" font-family="Helvetica,Arial" font-size="11">BOUNTIES · 3 · Casino + races</text>
+  <text x="940" y="532" fill="#6b7684" font-family="Helvetica,Arial" font-size="11">SAFEHOUSE · Hotel suite</text>
+</g>
+
+<!-- Row 2: Dockside (new) + legend -->
+<g>
+  <rect x="60" y="570" width="400" height="200" rx="4" fill="#0f1a1c" stroke="#3aa0a8" stroke-width="1.5"/>
+  <text x="80" y="602" fill="#4ec4cc" font-family="Helvetica,Arial" font-size="19" font-weight="bold">DOCKSIDE</text>
+  <text x="80" y="624" fill="#4a7a7a" font-family="Helvetica,Arial" font-size="11" letter-spacing="2">WATERFRONT · TIER 2 · ADDED</text>
+  <text x="80" y="652" fill="#9aa4b0" font-family="Helvetica,Arial" font-size="12">Container cranes, wet concrete, cargo</text>
+  <text x="80" y="672" fill="#9aa4b0" font-family="Helvetica,Arial" font-size="12">nobody declares. Smuggling. Boat runs.</text>
+  <line x1="80" y1="690" x2="440" y2="690" stroke="#2c3138"/>
+  <text x="80" y="712" fill="#6b7684" font-family="Helvetica,Arial" font-size="11">FIGHT VENUE · The Docks (3× env)</text>
+  <text x="80" y="732" fill="#6b7684" font-family="Helvetica,Arial" font-size="11">CARGO RUNS · 12 · BOUNTIES · 3</text>
+  <text x="80" y="752" fill="#6b7684" font-family="Helvetica,Arial" font-size="11">Warehouse Nine · Fish Market</text>
+</g>
+
+<!-- Stats panel -->
+<g>
+  <rect x="490" y="570" width="830" height="200" rx="4" fill="#0e1116" stroke="#2c3138" stroke-width="1.5"/>
+  <text x="512" y="602" fill="#e8b64c" font-family="Helvetica,Arial" font-size="15" font-weight="bold" letter-spacing="3">CONTENT BUDGET</text>
+  <text x="512" y="634" fill="#9aa4b0" font-family="Helvetica,Arial" font-size="12">NOW — 12 story missions · 3 side jobs · 8 interiors · 7 weapons · 8 vehicles · 1 enemy type</text>
+  <text x="512" y="652" fill="#6b7684" font-family="Helvetica,Arial" font-size="12">≈ 50 minutes of authored content</text>
+  <line x1="512" y1="668" x2="1298" y2="668" stroke="#2c3138"/>
+  <text x="512" y="694" fill="#cfd8e3" font-family="Helvetica,Arial" font-size="13" font-weight="bold">TARGET — the same city, four content engines</text>
+  <text x="512" y="718" fill="#9aa4b0" font-family="Helvetica,Arial" font-size="12">36 story missions · 48 contracts · 35 ring fights · 21 races · 21 bounties · 6 heists</text>
+  <text x="512" y="738" fill="#9aa4b0" font-family="Helvetica,Arial" font-size="12">24 street events · 70 leverage files · 12 enemy archetypes · 26 interiors · 24 vehicles</text>
+  <text x="512" y="758" fill="#e8b64c" font-family="Helvetica,Arial" font-size="12" font-weight="bold">≈ 32–45 hours · unbounded after the credits</text>
+</g>
+
+<text x="60" y="820" fill="#3f4750" font-family="Helvetica,Arial" font-size="11">D'YOUNGS GAMES · LEVERAGE · Cinder City content map · internal design document</text>
+</svg>
