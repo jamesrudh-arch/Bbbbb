@@ -1,5 +1,5 @@
 LEVERAGE TEST REPORT
-2026-11-23T15:02:56
+2026-11-23T15:25:50
 
 PASS  content.districts==7  7
 PASS  districts have palettes+landmarks
@@ -100,7 +100,7 @@ PASS  subtitle scale default
 PASS  camera sensitivity default
 PASS  Crash autoload present
 PASS  rescue script loads
-PASS  crash log written  5852 bytes
+PASS  crash log written  6606 bytes
 PASS  archetype roster at least 24  25 defined
 PASS  bosses exist alongside the regular roster  3 bosses
 PASS  roster covers street, ring and corporate
@@ -140,8 +140,18 @@ PASS  overlapping hit-stop does not compound
 PASS  suspend restores time
 PASS  resume restores time
 PASS  shake curve is monotonic
+PASS  trees authored  15 trees
+PASS  all 7 districts have ambient lines
+PASS  every tree has all four tags and a response  []
+PASS  four tags produce distinct outcomes  4 distinct
+PASS  four tags produce distinct lines  4 lines
+PASS  threat backfires harder at low trust  -20 vs -12
+PASS  charm pays more when trusted  14 vs 10
+PASS  unknown npc has no tree
+PASS  unknown npc resolves empty
+PASS  witness reactions authored  9 lines
 PASS  world instantiated
-PASS  world build under 60s  1362 ms
+PASS  world build under 60s  1287 ms
 PASS  seven districts built  7
 PASS  districts populated  8535 objects
 PASS  sidewalk nav graph per district
@@ -170,4 +180,4 @@ PASS  side job starts with job_ prefix
 PASS  job completes into completed_jobs
 PASS  job unlocks a discipline reward  ["brawler", "kickboxing"]
 
-PASSED: 168   FAILED: 0   TOTAL: 168
+PASSED: 178   FAILED: 0   TOTAL: 178

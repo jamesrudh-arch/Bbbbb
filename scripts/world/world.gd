@@ -61,6 +61,7 @@ func _ready() -> void:
 	_wire_gps()
 	_wire_rescue()
 	_wire_dialogue()
+	_wire_conversation()
 	world_streamer.setup(self, districts)
 	traffic.setup(self, districts)
 	npcs.setup(self, districts)
@@ -145,6 +146,15 @@ func say(lines: Array) -> void:
 func ask(question: Dictionary, choices: Array) -> void:
 	if dialogue != null:
 		dialogue.ask(question, choices)
+
+## All spoken content: barks, witness reactions and named-character talks.
+var conversations: Node = null
+
+func _wire_conversation() -> void:
+	conversations = load("res://scripts/systems/conversation.gd").new()
+	conversations.name = "Conversations"
+	add_child(conversations)
+	conversations.setup(self)
 
 func dialogue_active() -> bool:
 	return dialogue != null and dialogue.is_active()

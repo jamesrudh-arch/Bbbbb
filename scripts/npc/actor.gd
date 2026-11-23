@@ -181,6 +181,12 @@ func _civilian_ai(delta: float, player, dist: float) -> void:
 			_speed = 3.4
 		return
 	_speed = 1.35
+	# Stand still and face your partner while a street conversation runs.
+	var hold: float = float(get("_chat_hold") if get("_chat_hold") != null else 0.0)
+	if hold > 0.0:
+		velocity.x = move_toward(velocity.x, 0, 10.0 * delta)
+		velocity.z = move_toward(velocity.z, 0, 10.0 * delta)
+		return
 	if _state == "idle":
 		_idle_timer -= delta
 		velocity.x = move_toward(velocity.x, 0, 12.0 * delta)
@@ -211,6 +217,16 @@ func _pick_wander_point() -> Vector3:
 			return center + nodes[randi() % nodes.size()]
 	var base := wander_center if wander_center != Vector3.ZERO else global_position
 	return base + Vector3(randf_range(-14, 14), 0, randf_range(-14, 14))
+
+## Public: turn to look at a point. Used by conversations and ped-to-ped chats.
+func face_toward(pos: Vector3) -> void:
+	var d: Vector3 = pos - global_position
+	d.y = 0.0
+	if d.length() < 0.01:
+		return
+	_face_yaw = atan2(d.x, d.z)
+	if rig != null and ai == null:
+		rig.rotation.y = _face_yaw
 
 var _face_yaw := 0.0
 func _face_to(dir: Vector3) -> void:

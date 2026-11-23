@@ -26,6 +26,14 @@ func _process(delta: float) -> void:
 	_tick -= delta
 	if _tick > 0.0:
 		return
+	# A conversation, cutscene or menu legitimately parks the player. Being still
+	# is not being stuck.
+	if world.dialogue_active():
+		_stuck = 0.0
+		return
+	if world.get("player") != null and bool(world.player.get("dialogue_locked")):
+		_stuck = 0.0
+		return
 	_tick = CHECK_INTERVAL
 	var p = world.player
 	var pos: Vector3 = p.global_position

@@ -168,6 +168,10 @@ func _apply_hit(t: Node3D, damage: float, kind: String) -> void:
 		player.camera_rig.shake(Impact.shake_curve(clampf(damage * 0.06, 0.18, 0.85)))
 	Impact.hit_stop(strength)
 	StyleRank.on_hit(kind, damage, _counter_window > 0.0)
+	# Bystanders react. Without this the city is furnishing.
+	var world = get_tree().current_scene
+	if world != null and world.get("conversations") != null and randf() < 0.5:
+		world.conversations.witness_bark(t.global_position)
 	Game.add_heat(damage * 0.12)
 	Events.record("combat_hit", {"kind": kind, "damage": damage})
 

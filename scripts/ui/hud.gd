@@ -48,6 +48,8 @@ var dialogue_text: Label
 var choice_panel: PanelContainer
 var choice_list: VBoxContainer
 var compass: Control
+var top_left: Control
+var top_right: Control
 var minimap: Control
 var indoor_label: Label
 var vehicle_panel: PanelContainer
@@ -193,7 +195,7 @@ func _btn(text: String, size: int = 15) -> Button:
 
 # ---------------------------------------------------------------- status
 func _build_status() -> void:
-	var top_left := VBoxContainer.new()
+	top_left = VBoxContainer.new()
 	top_left.position = Vector2(20, TOP_INSET)
 	top_left.add_theme_constant_override("separation", 8)
 	root.add_child(top_left)
@@ -232,7 +234,7 @@ func _build_status() -> void:
 		wanted_pips.append(r)
 
 	# top right: money + heat + weapon
-	var top_right := VBoxContainer.new()
+	top_right = VBoxContainer.new()
 	top_right.set_anchors_preset(Control.PRESET_TOP_RIGHT)
 	top_right.position = Vector2(-286, TOP_INSET)
 	top_right.custom_minimum_size = Vector2(256, 0)
@@ -297,6 +299,87 @@ func _build_mission() -> void:
 # ---------------------------------------------------------------- compass
 ## Offers the unstick options. Deliberately two taps: "I'm good" resumes,
 ## "Get me out" relocates without touching money, flags or progress.
+## Ambient barks: small floating text near the speaker, not the dialogue box.
+## These must never block input or steal focus — they are background life.
+var _bark_layer: Control = null
+
+## Conversations and cutscenes own the screen. Hiding the chrome is not polish:
+## four tap targets stacked over a minimap is unreadable.
+func set_cinematic_mode(on: bool) -> void:
+	_cinematic = on
+	for n in [minimap, style_meter, compass, stick_base, stick_knob, btn_x, btn_y, btn_a, btn_b]:
+		if n != null and is_instance_valid(n):
+			n.visible = not on
+	if top_left != null and is_instance_valid(top_left):
+		top_left.visible = not on
+	if top_right != null and is_instance_valid(top_right):
+		top_right.visible = not on
+	if mission_box != null and is_instance_valid(mission_box):
+		mission_box.visible = not on
+	# Everything else (health, cash, prompts) fades rather than vanishing, so the
+	# player keeps a sense of their state during the conversation.
+	if root != null and is_instance_valid(root):
+		root.modulate.a = 0.0 if on else 1.0
+
+var _cinematic := false
+
+func show_bark(speaker: String, text: String, world_pos: Vector3) -> void:
+	if world == null or world.player == null:
+		return
+	if _bark_layer == null:
+		_bark_layer = Control.new()
+		_bark_layer.set_anchors_preset(Control.PRESET_FULL_RECT)
+		_bark_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		root.add_child(_bark_layer)
+	# Hide if the speaker is behind the camera or too far.
+	var cam: Camera3D = null
+	if world.player != null and world.player.get("camera_rig") != null:
+		cam = world.player.camera_rig.camera
+	if cam == null:
+		return
+	var d: float = cam.global_position.distance_to(world_pos)
+	if d > 22.0:
+		return
+	var screen: Vector2 = cam.unproject_position(world_pos + Vector3(0, 2.05, 0))
+	if cam.is_position_behind(world_pos):
+		return
+
+	var p := Control.new()
+	p.position = screen + Vector2(-120, 0)
+	p.custom_minimum_size = Vector2(240, 40)
+	p.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_bark_layer.add_child(p)
+
+	var l := Label.new()
+	l.text = text
+	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	l.custom_minimum_size = Vector2(240, 0)
+	l.add_theme_font_size_override("font_size", int(12 * clampf(PlatformUI.subtitle_size, 0.8, 1.4)))
+	l.add_theme_color_override("font_color", Color(0.86, 0.88, 0.92, 0.92))
+	l.add_theme_color_override("font_outline_color", Color(0.02, 0.02, 0.03, 0.95))
+	l.add_theme_constant_override("outline_size", 5)
+	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	p.add_child(l)
+
+	if speaker != "":
+		var n := Label.new()
+		n.text = speaker
+		n.add_theme_font_size_override("font_size", 10)
+		n.add_theme_color_override("font_color", Color(0.94, 0.76, 0.32, 0.85))
+		n.add_theme_color_override("font_outline_color", Color(0.02, 0.02, 0.03, 0.95))
+		n.add_theme_constant_override("outline_size", 5)
+		n.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		n.custom_minimum_size = Vector2(240, 0)
+		n.position = Vector2(0, -16)
+		p.add_child(n)
+
+	p.modulate.a = 0.0
+	var tw := create_tween()
+	tw.tween_property(p, "modulate:a", 1.0, 0.16)
+	tw.tween_interval(2.8)
+	tw.tween_property(p, "modulate:a", 0.0, 0.5)
+	tw.tween_callback(p.queue_free)
+
 func show_rescue_prompt(reason: String) -> void:
 	if _rescue_open: return
 	_rescue_open = true

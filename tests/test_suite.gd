@@ -23,7 +23,7 @@ func _ready() -> void:
 
 func _run() -> void:
 	print("\n=========== LEVERAGE TEST SUITE ===========")
-	for step in ["content", "input", "save_load", "economy", "combat", "audio", "scenes", "migration", "a11y", "archetypes", "ai", "style", "impact"]:
+	for step in ["content", "input", "save_load", "economy", "combat", "audio", "scenes", "migration", "a11y", "archetypes", "ai", "style", "impact", "conversation"]:
 		print("  [step] ", step)
 		match step:
 			"content": _test_content()
@@ -39,6 +39,7 @@ func _run() -> void:
 			"ai": _test_enemy_ai()
 			"style": _test_style_rank()
 			"impact": _test_impact()
+			"conversation": _test_conversation()
 	print("  [step] world")
 	await _test_world()
 	print("  [step] missions")
@@ -478,6 +479,73 @@ func _test_impact() -> void:
 	Impact.resume()
 	_ok("resume restores time", is_equal_approx(Engine.time_scale, 1.0))
 	_ok("shake curve is monotonic", Impact.shake_curve(0.9) > Impact.shake_curve(0.4))
+
+## Every authored tree must be complete and each tag must resolve differently.
+## A branching dialogue system where all four branches say the same thing is a
+## menu with extra steps.
+func _test_conversation() -> void:
+	var conv = load("res://scripts/systems/conversation.gd").new()
+	add_child(conv)
+	_ok("trees authored", conv.TREES.size() >= 15, "%d trees" % conv.TREES.size())
+	_ok("all 7 districts have ambient lines", conv.AMBIENT.size() == 7)
+
+	var broken := []
+	for id in conv.TREES:
+		var t: Dictionary = conv.TREES[id]
+		var choices: Array = t.get("choices", [])
+		if choices.size() != 4:
+			broken.append("%s: %d choices" % [id, choices.size()])
+		var tags := {}
+		for c in choices:
+			var tag := str(c.get("tag", ""))
+			tags[tag] = true
+			if not t.get("responses", {}).has(tag):
+				broken.append("%s: no response for %s" % [id, tag])
+		for need in ["ASK", "THREATEN", "LIE", "CHARM"]:
+			if not tags.has(need):
+				broken.append("%s: missing %s" % [id, need])
+	_ok("every tree has all four tags and a response", broken.is_empty(),
+		str(broken.slice(0, 3)))
+
+	# The four approaches must produce different outcomes for the same NPC.
+	Game.trust["family"] = 60.0
+	var outcomes := {}
+	var texts := {}
+	for tag in ["ASK", "CHARM", "THREATEN", "LIE"]:
+		Game.trust["family"] = 60.0
+		var r: Dictionary = conv.resolve("ngozi", tag)
+		outcomes[str(r["outcome"])] = true
+		texts[str(r["text"])] = true
+	_ok("four tags produce distinct outcomes", outcomes.size() >= 3,
+		"%d distinct" % outcomes.size())
+	_ok("four tags produce distinct lines", texts.size() == 4, "%d lines" % texts.size())
+
+	# Threatening someone who does not trust you must backfire harder.
+	Game.trust["family"] = 60.0
+	var warm: Dictionary = conv.resolve("ngozi", "THREATEN")
+	Game.trust["family"] = 5.0
+	var cold: Dictionary = conv.resolve("ngozi", "THREATEN")
+	_ok("threat backfires harder at low trust", float(cold["trust"]) < float(warm["trust"]),
+		"%.0f vs %.0f" % [cold["trust"], warm["trust"]])
+
+	# Charm pays more when trust is already high.
+	Game.trust["family"] = 90.0
+	var liked: Dictionary = conv.resolve("chidi", "CHARM")
+	Game.trust["family"] = 10.0
+	var unknown: Dictionary = conv.resolve("chidi", "CHARM")
+	_ok("charm pays more when trusted", float(liked["trust"]) >= float(unknown["trust"]),
+		"%.0f vs %.0f" % [liked["trust"], unknown["trust"]])
+
+	# Unwritten NPCs must degrade, not crash.
+	_ok("unknown npc has no tree", not conv.has_tree("not_a_person"))
+	_ok("unknown npc resolves empty", conv.resolve("not_a_person", "ASK").is_empty())
+
+	# Bark pools must exist and be non-empty.
+	var w := 0
+	for k in conv.WITNESS:
+		w += conv.WITNESS[k].size()
+	_ok("witness reactions authored", w >= 9, "%d lines" % w)
+	conv.queue_free()
 
 func _report() -> void:
 	print("\n------------------- RESULTS -------------------")
