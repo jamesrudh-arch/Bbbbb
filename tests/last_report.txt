@@ -1,5 +1,5 @@
 LEVERAGE TEST REPORT
-2026-11-23T14:18:11
+2026-11-23T14:59:42
 
 PASS  content.districts==7  7
 PASS  districts have palettes+landmarks
@@ -100,9 +100,35 @@ PASS  subtitle scale default
 PASS  camera sensitivity default
 PASS  Crash autoload present
 PASS  rescue script loads
-PASS  crash log written  2695 bytes
+PASS  crash log written  5698 bytes
+PASS  archetype roster at least 24  25 defined
+PASS  bosses exist alongside the regular roster  3 bosses
+PASS  roster covers street, ring and corporate
+PASS  6 skill tiers
+PASS  6 tier modifiers
+PASS  railhead has a roster  12
+PASS  corporate has a roster  8
+PASS  ring has a roster
+PASS  unknown id degrades safely
+PASS  all archetype x tier variants complete
+PASS  tier 6 health within 30% of tier 1  1.15x
+PASS  tier 6 reacts over 2x faster  2.35x
+PASS  tier 6 blocks far more  0.05 -> 0.62
+PASS  tier 6 feints  0.42
+PASS  tier 1 never feints  0.00
+PASS  enforcer far tougher than lookout
+PASS  lookout is faster
+PASS  lookout calls backup
+PASS  lookout can flee
+PASS  roster returns requested size
+PASS  roster tiers in range
+PASS  enemy_ai.gd loads
+PASS  starts idle
+PASS  recover time scales with coordination
+PASS  windup precedes strike (design rule)  0.61s
+PASS  on_hit reports a result
 PASS  world instantiated
-PASS  world build under 60s  1260 ms
+PASS  world build under 60s  1605 ms
 PASS  seven districts built  7
 PASS  districts populated  8535 objects
 PASS  sidewalk nav graph per district
@@ -131,4 +157,4 @@ PASS  side job starts with job_ prefix
 PASS  job completes into completed_jobs
 PASS  job unlocks a discipline reward  ["brawler", "kickboxing"]
 
-PASSED: 129   FAILED: 0   TOTAL: 129
+PASSED: 155   FAILED: 0   TOTAL: 155

@@ -102,6 +102,15 @@ func build(p_model_name: String, scale_factor: float = 1.0) -> bool:
 	var lib: AnimationLibrary = _library_for(glb_name)
 	if lib != null:
 		anim_player.add_animation_library("mocap", lib)
+		# The baked tracks are relative to the model root ("Character/Skeleton3D:..."),
+		# but the AnimationPlayer ships with root_node = "..". Godot resolves that
+		# NodePath lazily and caches it, and in a runtime-built hierarchy it caches
+		# a STALE path -- ap.get_node_or_null("Character/Skeleton3D") returned null
+		# even though the node plainly existed, so every track was unbound and the
+		# mesh sat in its bind pose. Assigning root_node explicitly after the player
+		# is in the tree forces a correct resolution.
+		anim_player.root_node = NodePath("..")
+		_verify_binding()
 		play("idle")
 	return true
 
@@ -125,6 +134,33 @@ func _library_for(glb_name: String) -> AnimationLibrary:
 				lib.get_animation(lc).loop_mode = Animation.LOOP_LINEAR
 	_lib_cache[glb_name] = lib
 	return lib
+
+## Confirms the animation actually binds. A silent T-pose is the worst kind of
+## failure: the game runs, the logs are clean, and every character is wrong.
+func _verify_binding() -> void:
+	if anim_player == null:
+		return
+	var anim := anim_player.get_animation(anim_player.current_animation if anim_player.current_animation != "" else "")
+	var probe := "mocap/idle"
+	if anim_player.has_animation(probe):
+		anim = anim_player.get_animation(probe)
+	if anim == null or anim.get_track_count() == 0:
+		return
+	# Track paths resolve relative to root_node, NOT relative to the player.
+	# (ap.get_node_or_null("Character/Skeleton3D") returns null even when the
+	# animation binds perfectly -- probe through root_node instead.)
+	var rn := anim_player.get_node_or_null(anim_player.root_node)
+	if rn == null:
+		print("[RIG] WARNING: root_node ", anim_player.root_node, " does not resolve")
+		return
+	var unbound := 0
+	for i in anim.get_track_count():
+		var np := String(anim.track_get_path(i)).get_slice(":", 0)
+		if rn.get_node_or_null(np) == null:
+			unbound += 1
+	if unbound > 0:
+		print("[RIG] WARNING: ", unbound, "/", anim.get_track_count(),
+			" animation tracks unbound on ", model_name, " - character will T-pose")
 
 func _process(delta: float) -> void:
 	if anim_player == null:

@@ -21,6 +21,8 @@ var wander_center := Vector3.ZERO
 var notice_range := 16.0
 
 var rig: Node3D
+var ai: Node = null                 # enemy_ai.gd state machine (hostiles only)
+var fight_data: Dictionary = {}     # archetype+tier, from archetypes.gd
 var _speed := 1.35
 var _state := "wander"
 var _idle_timer := 1.0
@@ -65,6 +67,8 @@ func _build() -> void:
 		var models: Array = ped["models"]
 		model_name = models[randi() % models.size()]
 	rig.build(model_name, 0.92)
+	if hostile:
+		_build_ai()
 
 	# Contact shadow — a cheap grounding cue that reads on mobile without
 	# costing a real shadow map per actor.
@@ -103,39 +107,65 @@ func _physics_process(delta: float) -> void:
 		return
 
 	var dist := global_position.distance_to(player.global_position)
-	if hostile:
-		_hostile_ai(delta, player, dist)
+	if hostile and ai != null:
+		if not ai.is_engaged() and dist < notice_range:
+			ai.begin(player)
+		ai._physical(delta)
 	else:
 		_civilian_ai(delta, player, dist)
 	move_and_slide()
 	_animate()
 
-func _hostile_ai(delta: float, player, dist: float) -> void:
-	# Pursue and swing. Police also chase while the player carries heat.
-	var stopping := _attack_range * 0.92
-	var to: Vector3 = player.global_position - global_position
-	to.y = 0
-	if dist > stopping:
-		var dir := to.normalized()
-		velocity.x = move_toward(velocity.x, dir.x * _speed * 1.6, 10.0 * delta)
-		velocity.z = move_toward(velocity.z, dir.z * _speed * 1.6, 10.0 * delta)
-		_face_to(to)
-	else:
-		velocity.x = move_toward(velocity.x, 0, 16.0 * delta)
-		velocity.z = move_toward(velocity.z, 0, 16.0 * delta)
-		_face_to(to)
-		if _attack_cd <= 0.0:
-			_attack_cd = randf_range(1.7, 2.6)
-			_swing(player)
+## Build the state machine from this actor's archetype and skill tier.
+## Falls back to a plain thug if the archetype id is unknown, so a typo in
+## content data degrades to a fightable enemy instead of an inert one.
+func _build_ai() -> void:
+	var arch: String = str(fight_data.get("id", ""))
+	if arch == "":
+		arch = "street_thug"
+	var tier: int = int(fight_data.get("tier", 1))
+	if fight_data.is_empty():
+		var district_tier: int = int(Content.DISTRICTS.get(home_district, {}).get("tier", 1))
+		fight_data = Archetypes.make(arch, district_tier)
 
-func _swing(player) -> void:
-	if rig != null: rig.play("punch", 1.1)
+	ai = load("res://scripts/systems/enemy_ai.gd").new()
+	ai.name = "EnemyAI"
+	add_child(ai)
+	ai.setup(self, fight_data)
+	ai.strike_landed.connect(_on_ai_strike)
+
+	max_health = float(fight_data.get("health", 60.0))
+	health = max_health
+	armor = float(fight_data.get("armor", 0.0))
+	_speed = float(fight_data.get("speed", 1.3))
+	_attack_range = float(fight_data.get("range", 2.0))
+	_damage = float(fight_data.get("damage", 6.5))
+	display_name = str(fight_data.get("name", display_name))
+
+## A landed strike from the AI. Damage comes from the archetype — the old path
+## had a single hardcoded 6.5 for every enemy in the game, so a dock hauler hit
+## exactly as hard as a lookout.
+## While the AI is in a thinking state, hold a fighting stance rather than idle.
+func _hold_stance() -> void:
+	if rig == null or ai == null:
+		return
+	if ai.state == ai.S_ALERT or ai.state == ai.S_PRESS or ai.state == ai.S_SPACE:
+		if rig.anim_player != null and not String(rig.anim_player.current_animation).ends_with("idle"):
+			rig.play("idle", 1.0)
+
+func _on_ai_strike(_attacker, amount: float) -> void:
+	if rig != null:
+		rig.play("punch_hook" if amount >= 10.0 else "punch_cross", 1.1)
 	Audio.play_at("punch_swing", global_position, randf_range(0.9, 1.05), -6.0)
-	await get_tree().create_timer(0.16).timeout
-	if is_dead: return
-	if global_position.distance_to(player.global_position) <= _attack_range:
+	await get_tree().create_timer(0.14).timeout
+	if is_dead:
+		return
+	var player = get_tree().get_first_node_in_group("player")
+	if player == null:
+		return
+	if global_position.distance_to(player.global_position) <= _attack_range + 0.5:
 		if player.combat != null:
-			player.combat.notify_attacked(self)
+			player.combat.notify_attacked(self, amount)
 
 func _civilian_ai(delta: float, player, dist: float) -> void:
 	# NPCs with heat nearby react: they back away, then flee.
@@ -186,15 +216,33 @@ var _face_yaw := 0.0
 func _face_to(dir: Vector3) -> void:
 	if dir.length() < 0.01: return
 	_face_yaw = lerp_angle(_face_yaw, atan2(dir.x, dir.z), 0.18)
-	if rig != null: rig.rotation.y = _face_yaw
+	# Hostiles are faced by enemy_ai on the body; only civils turn the rig.
+	if rig != null and ai == null:
+		rig.rotation.y = _face_yaw
+
+var _last_motion := -1.0
 
 func _animate() -> void:
 	if rig == null: return
 	var spd := Vector2(velocity.x, velocity.z).length()
-	rig.set_motion(spd / 1.35 * 2.2)
+	var m := spd / 1.35 * 2.2
+	# Calling set_motion every frame with the same value restarts the idle clip
+	# constantly, which pins the mesh to its bind pose. Only react to change.
+	if absf(m - _last_motion) < 0.05:
+		return
+	_last_motion = m
+	rig.set_motion(m)
 
 func take_hit(amount: float, _from) -> void:
 	if is_dead: return
+	# Let the AI decide whether this landed: it owns block and dodge.
+	if ai != null and _from != null and is_instance_valid(_from):
+		var dir: Vector3 = _from.global_position - global_position
+		var res: Dictionary = ai.on_hit(amount, dir)
+		if bool(res.get("blocked", false)):
+			amount = float(res.get("damage", 0.0))
+			if amount <= 0.5:
+				return
 	health -= amount
 	if rig != null: rig.hit_react()
 	Audio.play_at("stagger", global_position, randf_range(0.95, 1.1), -4.0)

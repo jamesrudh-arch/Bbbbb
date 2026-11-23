@@ -221,12 +221,14 @@ func _cycle_weapon() -> void:
 	Game.equip_weapon(owned[(i + 1) % owned.size()])
 
 # ---------------------------------------------------------------- incoming
-func notify_attacked(attacker: Node3D) -> void:
+## `amount` comes from the attacker's archetype. It used to be hardcoded to 6.5
+## here, which made every enemy in the game hit for identical damage.
+func notify_attacked(attacker: Node3D, amount: float = 6.5) -> void:
 	if player == null: return
 	if player.has_meta("invulnerable_until"):
 		if Time.get_ticks_msec() / 1000.0 < float(player.get_meta("invulnerable_until")):
 			return
-	var dmg := 6.5 * randf_range(0.8, 1.15)
+	var dmg := amount * randf_range(0.8, 1.15)
 	if _blocking:
 		dmg *= 0.25
 		Audio.play_at("block", player.global_position, 1.0, -4.0)

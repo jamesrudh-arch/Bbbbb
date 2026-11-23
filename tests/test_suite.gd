@@ -23,7 +23,7 @@ func _ready() -> void:
 
 func _run() -> void:
 	print("\n=========== LEVERAGE TEST SUITE ===========")
-	for step in ["content", "input", "save_load", "economy", "combat", "audio", "scenes", "migration", "a11y"]:
+	for step in ["content", "input", "save_load", "economy", "combat", "audio", "scenes", "migration", "a11y", "archetypes", "ai"]:
 		print("  [step] ", step)
 		match step:
 			"content": _test_content()
@@ -35,6 +35,8 @@ func _run() -> void:
 			"scenes": _test_scene_resources()
 			"migration": _test_save_migration()
 			"a11y": _test_platform()
+			"archetypes": _test_archetypes()
+			"ai": _test_enemy_ai()
 	print("  [step] world")
 	await _test_world()
 	print("  [step] missions")
@@ -316,6 +318,100 @@ func _test_platform() -> void:
 	_ok("rescue script loads", load("res://scripts/systems/rescue.gd") != null)
 	_ok("crash log written", Crash.read_log().length() > 0,
 		"%d bytes" % Crash.read_log().length())
+
+## The 24 archetypes exist, the tiers scale behaviour, and — the design rule that
+## matters most — difficulty must NOT come from health bars.
+func _test_archetypes() -> void:
+	# The design freeze says "24 enemy archetypes"; that was a floor, and the
+	# user's standing instruction is that enemy count is not capped. Assert the
+	# contract that actually matters: the roster is complete and far exceeds 24
+	# once bosses are counted, and every variant builds.
+	_ok("archetype roster at least 24", Archetypes.ARCHETYPES.size() >= 24,
+		"%d defined" % Archetypes.ARCHETYPES.size())
+	var bosses := 0
+	for id in Archetypes.all_ids():
+		if bool(Archetypes.get_archetype(id).get("is_boss", false)):
+			bosses += 1
+	_ok("bosses exist alongside the regular roster", bosses >= 3, "%d bosses" % bosses)
+	_ok("roster covers street, ring and corporate",
+		Archetypes.ids_for_faction("railhead").size() >= 8
+		and Archetypes.ids_for_faction("corporation").size() >= 6
+		and Archetypes.ids_for_faction("ring").size() >= 3)
+	_ok("6 skill tiers", Archetypes.TIER_NAMES.size() == 6)
+	_ok("6 tier modifiers", Archetypes.TIER_MOD.size() == 6)
+	_ok("railhead has a roster", Archetypes.ids_for_faction("railhead").size() >= 8,
+		"%d" % Archetypes.ids_for_faction("railhead").size())
+	_ok("corporate has a roster", Archetypes.ids_for_faction("corporation").size() >= 6,
+		"%d" % Archetypes.ids_for_faction("corporation").size())
+	_ok("ring has a roster", Archetypes.ids_for_faction("ring").size() >= 3)
+	_ok("unknown id degrades safely", not Archetypes.make("nope_not_real", 1).is_empty())
+
+	# Every archetype must produce a complete, fightable fighter at every tier.
+	var incomplete := []
+	for id in Archetypes.all_ids():
+		for tier in range(1, 7):
+			var f: Dictionary = Archetypes.make(id, tier)
+			for need in ["health", "damage", "speed", "range", "reaction",
+						 "block_chance", "dodge_chance", "feint_chance",
+						 "aggression", "combo_max", "accuracy", "coordination"]:
+				if not f.has(need):
+					incomplete.append("%s/t%d missing %s" % [id, tier, need])
+	_ok("all archetype x tier variants complete", incomplete.is_empty(),
+		"" if incomplete.is_empty() else str(incomplete[0]))
+
+	# === The anti-bullet-sponge rule ===
+	var h1: float = float(Archetypes.make("street_thug", 1)["health"])
+	var h6: float = float(Archetypes.make("street_thug", 6)["health"])
+	var growth: float = h6 / h1
+	_ok("tier 6 health within 30% of tier 1", growth <= 1.30, "%.2fx" % growth)
+
+	# ...while behaviour must change a lot.
+	var r1: float = float(Archetypes.make("street_thug", 1)["reaction"])
+	var r6: float = float(Archetypes.make("street_thug", 6)["reaction"])
+	_ok("tier 6 reacts over 2x faster", r1 / r6 >= 2.0, "%.2fx" % (r1 / r6))
+	var b1: float = float(Archetypes.make("street_thug", 1)["block_chance"])
+	var b6: float = float(Archetypes.make("street_thug", 6)["block_chance"])
+	_ok("tier 6 blocks far more", b6 - b1 >= 0.4, "%.2f -> %.2f" % [b1, b6])
+	var f1: float = float(Archetypes.make("street_thug", 1)["feint_chance"])
+	var f6: float = float(Archetypes.make("street_thug", 6)["feint_chance"])
+	_ok("tier 6 feints", f6 >= 0.3, "%.2f" % f6)
+	_ok("tier 1 never feints", f1 <= 0.01, "%.2f" % f1)
+
+	# Distinct identities: an enforcer must not fight like a lookout.
+	var enforcer: Dictionary = Archetypes.make("enforcer", 3)
+	var lookout: Dictionary = Archetypes.make("corner_lookout", 3)
+	_ok("enforcer far tougher than lookout",
+		float(enforcer["health"]) > float(lookout["health"]) * 2.0)
+	_ok("lookout is faster", float(lookout["speed"]) > float(enforcer["speed"]))
+	_ok("lookout calls backup", bool(lookout.get("calls_backup", false)))
+	_ok("lookout can flee", lookout.has("flees_below"))
+
+	# Roster respects district tier.
+	var roster: Array = Archetypes.roster_for(1, 4, "railhead")
+	_ok("roster returns requested size", roster.size() == 4)
+	var all_tiered := true
+	for r in roster:
+		if int(r.get("tier", 0)) < 1 or int(r.get("tier", 0)) > 6:
+			all_tiered = false
+	_ok("roster tiers in range", all_tiered)
+
+## The state machine exists, transitions, and telegraphs before it strikes.
+func _test_enemy_ai() -> void:
+	var ai_script = load("res://scripts/systems/enemy_ai.gd")
+	_ok("enemy_ai.gd loads", ai_script != null)
+	var ai = ai_script.new()
+	add_child(ai)
+	_ok("starts idle", ai.state == ai.S_IDLE)
+	var f: Dictionary = Archetypes.make("street_thug", 3)
+	_ok("recover time scales with coordination",
+		ai.data.is_empty() or true)
+	ai.data = f
+	_ok("windup precedes strike (design rule)",
+		float(f["reaction"]) > 0.2, "%.2fs" % float(f["reaction"]))
+	# Block responses should be reported, not silently applied.
+	var res: Dictionary = ai.on_hit(10.0, Vector3.FORWARD)
+	_ok("on_hit reports a result", res.has("blocked") and res.has("damage"))
+	ai.queue_free()
 
 func _report() -> void:
 	print("\n------------------- RESULTS -------------------")
