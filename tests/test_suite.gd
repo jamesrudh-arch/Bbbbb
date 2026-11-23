@@ -42,7 +42,7 @@ func _run() -> void:
 
 # ------------------------------------------------------------------ content
 func _test_content() -> void:
-	_ok("content.districts==6", Content.DISTRICTS.size() == 6, str(Content.DISTRICTS.size()))
+	_ok("content.districts==7", Content.DISTRICTS.size() == 7, str(Content.DISTRICTS.size()))
 	var all_have_palette := true
 	for id in Content.DISTRICTS:
 		var d: Dictionary = Content.DISTRICTS[id]
@@ -198,7 +198,7 @@ func _test_world() -> void:
 	var ms := Time.get_ticks_msec() - t0
 	_ok("world instantiated", world != null)
 	_ok("world build under 60s", ms < 60000, "%d ms" % ms)
-	_ok("six districts built", world.districts.size() == 6, str(world.districts.size()))
+	_ok("seven districts built", world.districts.size() == 7, str(world.districts.size()))
 	var total_children := 0
 	for id in world.districts:
 		var d = world.districts[id]

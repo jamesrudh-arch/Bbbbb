@@ -1,7 +1,7 @@
 LEVERAGE TEST REPORT
-2026-11-23T12:33:37
+2026-11-23T12:57:03
 
-PASS  content.districts==6  6
+PASS  content.districts==7  7
 PASS  districts have palettes+landmarks
 PASS  content.characters==16  16
 PASS  every character has a real model file
@@ -85,12 +85,12 @@ PASS  scene loads: player.tscn
 PASS  project uses mobile renderer
 PASS  main scene is boot
 PASS  world instantiated
-PASS  world build under 60s  7301 ms
-PASS  six districts built  6
-PASS  districts populated  7867 objects
+PASS  world build under 60s  7325 ms
+PASS  seven districts built  7
+PASS  districts populated  8535 objects
 PASS  sidewalk nav graph per district
 PASS  drive graph per district
-PASS  enterable portals exist  18 portals
+PASS  enterable portals exist  21 portals
 PASS  named characters spawned >= 12  16
 PASS  pedestrians spawned >= 20  25
 PASS  player in scene

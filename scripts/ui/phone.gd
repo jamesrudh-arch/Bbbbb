@@ -170,7 +170,7 @@ func show_home() -> void:
 	_screen = HOME
 	_clear()
 	_root.add_child(_hdr("LEVERAGE OS", "PHONE", Color(0.95, 0.78, 0.30)))
-	_root.add_child(_sub("Emeka Obi · Ash Row"))
+	_root.add_child(_sub("Marcus Adeyemi · Ash Row"))
 	_root.add_child(_sep())
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 8)
@@ -258,7 +258,7 @@ func _play_conversation(lines: Array, title: String) -> void:
 		var who: String = str(pair[0])
 		var text: String = str(pair[1])
 		var nm: String = Content.CHARACTERS.get(who, {}).get("name", who.capitalize())
-		var lbl := _sub(("%s: %s" % [nm, text]) if who != "emeka" else ("You: " + text))
+		var lbl := _sub(("%s: %s" % [nm, text]) if who != "marcus" else ("You: " + text))
 		lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		lbl.custom_minimum_size = Vector2(360, 0)
 		_root.add_child(lbl)

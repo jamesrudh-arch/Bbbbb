@@ -38,8 +38,8 @@ const DISTRICTS := {
 		"landmarks": ["garage", "weigh_station", "crane_four"],
 		"music": "tension", "population": 7,
 	},
-	"cinder_line": {
-		"name": "Cinder Line", "grid": [0, 1], "tier": 2,
+	"railhead": {
+		"name": "Railhead", "grid": [0, 1], "tier": 2,
 		"tagline": "The rail that fed the city, now feeding the foundries.",
 		"palette": {"sky": Color(0.40, 0.30, 0.27), "ground": Color(0.26, 0.21, 0.19),
 			"wall": Color(0.44, 0.33, 0.29), "trim": Color(0.62, 0.36, 0.22),
@@ -58,6 +58,16 @@ const DISTRICTS := {
 		"landmarks": ["glass_tower", "corporate_club", "helipad"],
 		"music": "explore", "population": 9,
 	},
+	"dockside": {
+		"name": "Dockside", "grid": [2, 2], "tier": 2,
+		"tagline": "Container cranes, wet concrete, and cargo nobody declares.",
+		"palette": {"sky": Color(0.30, 0.36, 0.40), "ground": Color(0.24, 0.26, 0.27),
+			"wall": Color(0.40, 0.43, 0.45), "trim": Color(0.58, 0.55, 0.44),
+			"accent": Color(0.42, 0.76, 0.84)},
+		"faction": "crew", "density": 0.5, "height": [2, 4],
+		"landmarks": ["crane_yard", "fish_market", "warehouse_nine"],
+		"music": "tension", "population": 7,
+	},
 	"neon_mile": {
 		"name": "Neon Mile", "grid": [2, 1], "tier": 3,
 		"tagline": "Two in the morning and nobody's counting the receipts.",
@@ -70,7 +80,7 @@ const DISTRICTS := {
 	},
 }
 
-const DISTRICT_ORDER := ["ash_row", "guttermarket", "iron_yard", "cinder_line", "vesper_heights", "neon_mile"]
+const DISTRICT_ORDER := ["ash_row", "guttermarket", "iron_yard", "railhead", "vesper_heights", "neon_mile", "dockside"]
 
 ## Landmarks that can be entered. Each becomes a portal + interior scene.
 const INTERIORS := {
@@ -103,12 +113,12 @@ const INTERIORS := {
 # ============================================================ CAST
 # 16 named characters. `role` drives AI behaviour, `model` maps to a rigged GLB.
 const CHARACTERS := {
-	"emeka": {"name": "Emeka Obi", "model": "casual-male", "role": "protagonist",
+	"marcus": {"name": "Marcus Adeyemi", "model": "casual-male", "role": "protagonist",
 		"faction": "family", "home": "ash_row", "color": Color(0.85, 0.55, 0.25),
-		"bio": "Thirty-one. Came home to a debt with his brother's name on it."},
+		"bio": "Thirty-one. Came home because his brother stopped answering his phone."},
 	"chidi": {"name": "Chidi Obi", "model": "casual2-male", "role": "brother",
 		"faction": "family", "home": "ash_row", "color": Color(0.70, 0.45, 0.30),
-		"bio": "Younger. Borrowed ₦4.2 million from the wrong ledger and vanished."},
+		"bio": "Younger. Took something he shouldn't have. Now someone has him, and they want Marcus to pay for it."},
 	"ngozi": {"name": "Mama Ngozi", "model": "casual-female", "role": "mentor",
 		"faction": "family", "home": "ash_row", "color": Color(0.95, 0.72, 0.35),
 		"bio": "Runs the kitchen. Runs Ash Row. Knows which one matters more."},
@@ -146,7 +156,7 @@ const CHARACTERS := {
 		"faction": "corporation", "home": "vesper_heights", "color": Color(0.66, 0.72, 0.80),
 		"bio": "Meridian legal. Drafts the paper that makes a kidnapping lawful."},
 	"osaze": {"name": "Osaze 'Oz' Iyamu", "model": "casual-male", "role": "informant",
-		"faction": "crew", "home": "cinder_line", "color": Color(0.58, 0.74, 0.52),
+		"faction": "crew", "home": "railhead", "color": Color(0.58, 0.74, 0.52),
 		"bio": "Sells rumours by the yard. Most of them are even true."},
 	"mara": {"name": "Mara Silva", "model": "casual-female", "role": "crew_boss",
 		"faction": "crew", "home": "neon_mile", "color": Color(0.92, 0.36, 0.50),
@@ -156,7 +166,7 @@ const CHARACTERS := {
 # ~25 pedestrians: archetype templates, named at runtime.
 const PEDESTRIANS := {
 	"market_trader": {"models": ["casual-female", "casual2-female", "worker-female"], "districts": ["guttermarket"], "role": "trader"},
-	"worker": {"models": ["worker-male", "worker-female"], "districts": ["iron_yard", "cinder_line"], "role": "worker"},
+	"worker": {"models": ["worker-male", "worker-female"], "districts": ["iron_yard", "railhead"], "role": "worker"},
 	"office_drone": {"models": ["suit-male", "suit-female"], "districts": ["vesper_heights"], "role": "office"},
 	"clubber": {"models": ["casual3-male", "casual3-female", "casual2-male"], "districts": ["neon_mile"], "role": "reveller"},
 	"neighbour": {"models": ["casual-male", "casual-female", "casual-bald"], "districts": ["ash_row"], "role": "neighbour"},
@@ -264,7 +274,7 @@ const VEHICLE_TYPES := {
 const MISSIONS := {
 	"homecoming": {
 		"title": "Homecoming", "district": "ash_row", "chapter": 1,
-		"brief": "You're back. Mama Ngozi is holding a plate and a problem.",
+		"brief": "Your brother has been missing nine days. Mama Ngozi called you home.",
 		"objectives": [
 			{"type": "reach", "target": "mama_ngozi", "text": "Walk to Mama Ngozi's Kitchen"},
 			{"type": "talk", "target": "ngozi", "text": "Talk to Mama Ngozi"},
@@ -331,13 +341,13 @@ const MISSIONS := {
 		"sets": ["ash_fall_done"], "unlocks": ["cinder_final"],
 	},
 	"cinder_final": {
-		"title": "Cinder", "district": "cinder_line", "chapter": 5,
+		"title": "Cinder", "district": "railhead", "chapter": 5,
 		"brief": "Chidi's in the foundry. Okafor's people are already inside.",
 		"objectives": [
 			{"type": "reach", "target": "foundry", "text": "Get to the foundry floor"},
 			{"type": "fight", "target": "enforcers", "count": 4, "text": "Clear the foundry"},
 			{"type": "talk", "target": "chidi", "text": "Get Chidi out"},
-			{"type": "escape", "text": "Get out of Cinder Line"},
+			{"type": "escape", "text": "Get out of Railhead"},
 		],
 		"reward": {"money": 6000, "xp": 900, "trust": {"family": 30}},
 		"sets": ["cinder_done", "story_complete"], "unlocks": [],
@@ -354,7 +364,7 @@ const MISSIONS := {
 		"sets": ["sunday_done"], "unlocks": [],
 	},
 	"night_shift": {
-		"title": "Night Shift", "district": "cinder_line", "chapter": 2,
+		"title": "Night Shift", "district": "railhead", "chapter": 2,
 		"brief": "Oz will talk, but only where nobody can hear him over the rail.",
 		"objectives": [
 			{"type": "reach", "target": "rail_platform", "text": "Meet Oz at the rail platform"},
@@ -447,10 +457,10 @@ const CALLS := {
 	"ngozi_checkin": {
 		"from": "ngozi", "title": "Mama Ngozi", "once": true,
 		"lines": [
-			["ngozi", "Emeka. You eating?"],
-			["emeka", "I'm handling something."],
+			["ngozi", "Marcus. You eating?"],
+			["marcus", "I'm handling something."],
 			["ngozi", "That's not what I asked you."],
-			["emeka", "Not yet."],
+			["marcus", "Not yet."],
 			["ngozi", "Come by the kitchen. Bring your appetite, not your problems."],
 		],
 		"flag": "ngozi_checked_in",
@@ -459,9 +469,9 @@ const CALLS := {
 		"from": "chidi", "title": "Chidi", "once": true,
 		"lines": [
 			["chidi", "They know you're looking."],
-			["emeka", "Where are you?"],
+			["marcus", "Where are you?"],
 			["chidi", "Somewhere with a bad door and worse people."],
-			["emeka", "Stay there. I'm coming."],
+			["marcus", "Stay there. I'm coming."],
 			["chidi", "Don't. Not yet. They want you to come."],
 		],
 		"flag": "chidi_called",
@@ -470,9 +480,9 @@ const CALLS := {
 		"from": "tunde", "title": "Tunde Bello", "once": true,
 		"lines": [
 			["tunde", "There's a container down here that never got manifested."],
-			["emeka", "Whose?"],
+			["marcus", "Whose?"],
 			["tunde", "Meridian's. But the crane clerk signed it over to nobody."],
-			["emeka", "Nobody has a name?"],
+			["marcus", "Nobody has a name?"],
 			["tunde", "Nobody has a name. Come see for yourself."],
 		],
 		"flag": "tunde_tipped",
@@ -481,7 +491,7 @@ const CALLS := {
 		"from": "ada", "title": "Ada Meridian", "once": true,
 		"lines": [
 			["ada", "You've been asking about a ledger."],
-			["emeka", "You've been listening."],
+			["marcus", "You've been listening."],
 			["ada", "I'm in the business of knowing. Lobby of the tower. Come alone."],
 		],
 		"flag": "ada_invited",
@@ -490,7 +500,7 @@ const CALLS := {
 		"from": "mara", "title": "Mara", "once": false,
 		"lines": [
 			["mara", "You're making a mess in my district."],
-			["emeka", "It was already messy."],
+			["marcus", "It was already messy."],
 			["mara", "Then I'll know who to bill for it."],
 		],
 	},
@@ -498,9 +508,9 @@ const CALLS := {
 		"from": "kola", "title": "Kola", "once": true,
 		"lines": [
 			["kola", "Your brother's note is due."],
-			["emeka", "Chidi signed it, not me."],
+			["marcus", "Chidi signed it, not me."],
 			["kola", "You're standing in the same house, aren't you."],
-			["emeka", "Come find out."],
+			["marcus", "Come find out."],
 		],
 		"flag": "kola_threatened",
 	},
@@ -508,7 +518,7 @@ const CALLS := {
 		"from": "okafor", "title": "Insp. Okafor", "once": false,
 		"lines": [
 			["okafor", "You've got heat on you, Obi."],
-			["emeka", "You put it there."],
+			["marcus", "You put it there."],
 			["okafor", "I'm the only reason it hasn't gone to arrest. Keep it that way."],
 		],
 	},
@@ -543,13 +553,13 @@ const RADIO := {
 	],
 	"reports": [
 		{"id": "r1", "title": "Meridian denies container find", "text": "Meridian Group has denied any knowledge of the container found unmanifested at Iron Yard on Tuesday."},
-		{"id": "r2", "title": "Body found near rail platform", "text": "Police have confirmed a body found near the Cinder Line rail platform. They are not releasing a name."},
+		{"id": "r2", "title": "Body found near rail platform", "text": "Police have confirmed a body found near the Railhead rail platform. They are not releasing a name."},
 		{"id": "r3", "title": "Guttermarket fire ruled accidental", "text": "The fire that destroyed eleven stalls in Guttermarket has been ruled accidental. Traders are disputing it."},
 		{"id": "r4", "title": "Obi file reassigned", "text": "The missing persons file for Chidi Obi has been reassigned to Detective Ibrahim after three months unassigned."},
 		{"id": "r5", "title": "Heatwave warning", "text": "Temperatures expected to reach 34 degrees through the weekend. Residents are advised to stay indoors."},
 		{"id": "r6", "title": "Mile shooting: no arrests", "text": "Police say no arrests have been made in relation to the shooting outside the Velvet Room last Friday."},
 		{"id": "r7", "title": "Meridian stock slides", "text": "Meridian shares fell 4.1 percent after the Chronicle published details of an internal audit memo."},
-		{"id": "r8", "title": "Foundry to cut shifts", "text": "The Cinder Line foundry will cut overnight shifts from next month, citing demand."},
+		{"id": "r8", "title": "Foundry to cut shifts", "text": "The Railhead foundry will cut overnight shifts from next month, citing demand."},
 	],
 }
 

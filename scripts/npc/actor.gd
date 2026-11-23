@@ -237,7 +237,7 @@ func talk() -> Dictionary:
 func _line_for(cid: String) -> String:
 	var lines := {
 		"ngozi": "You're thinner than when you left. Sit. Chidi owes money to people who don't write receipts.",
-		"chidi": "Emeka. I know. I know what I did. I just need one more week.",
+		"chidi": "Marcus. I know. I know what I did. I just need one more week.",
 		"tunde": "Bring it to the garage. If it rolls, I'll make it roll faster.",
 		"eze": "Everyone comes through this counter eventually. You're late.",
 		"sunday": "Heard your brother's name in the chair last week. Didn't like the way it was said.",

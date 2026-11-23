@@ -1,5 +1,5 @@
 extends CharacterBody3D
-## PLAYER — third-person controller for Emeka Obi.
+## PLAYER — third-person controller for Marcus Adeyemi.
 ## Camera-relative movement, sprint/crouch, dodge roll, vehicle hand-off, and
 ## the bridge points that combat/interaction/driver hang off.
 
@@ -48,7 +48,7 @@ const SPAWN_YAW := {
 }
 const SPAWN_DISTRICTS := {
 	"apartment": "ash_row", "kitchen": "ash_row", "pawn": "guttermarket",
-	"garage": "iron_yard", "club": "neon_mile", "foundry": "cinder_line",
+	"garage": "iron_yard", "club": "neon_mile", "foundry": "railhead",
 }
 
 func _ready() -> void:

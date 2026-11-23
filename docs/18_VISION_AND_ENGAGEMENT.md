@@ -1,4 +1,4 @@
-# CINDERFALL — Vision & Engagement Plan
+# LEVERAGE — Vision & Engagement Plan
 ### D'Youngs Games · Development direction document
 *Written 23 Nov 2026. This is a decision document, not a task list. Nothing in it is coded yet.*
 
@@ -60,33 +60,16 @@ This document is about *that*.
 
 ### 1.1 The studio: D'Youngs Games
 
-There is currently no logo. There is no intro. The game starts at a menu.
+**The mark:** a monogram **D·Y** cut from one piece of dark gunmetal, with a gold bevel inlaid along the cut. Built as real 3D geometry with a PBR gold material, animated in-engine.
+**The reveal (4.2 s):** black → a low sub-bass note → ash particles converge into the monogram silhouette → the metal resolves and a warm light-sweep crosses the gold bevel → "D'YOUNGS GAMES" typesets beneath.
 
-**The mark:** a monogram **D·Y** cut from one piece of dark gunmetal, with a gold bevel inlaid along the cut. Two clean forms that interlock — the D's bowl cradling the Y's stem. It reads as a stamp, a seal, a hallmark. Something a city would put on its currency.
+### 1.2 The game name — LEVERAGE (locked)
 
-**The reveal (4.2 seconds):**
-1. Black. A single low sub-bass note.
-2. Ash particles drift in and *converge* into the monogram silhouette.
-3. The metal resolves — a warm gold light-sweep travels across the bevel, left to right.
-4. "D'YOUNGS GAMES" typesets beneath in wide-tracked uppercase.
-5. Dust falls away. Cut to title.
+> **LEVERAGE — EVERYBODY HAS SOMETHING ON YOU.**
 
-Built as real 3D geometry in Godot with a PBR gold material — not a flat PNG. It will animate in-engine, and it is the first thing every player sees.
+The name is the thesis: everybody has something they want, something they hide, and something that can be used against them. Every system in the game should express that — favours owed, secrets held, calls answered, people bought.
 
-### 1.2 The game name
-
-**Current: LEVERAGE.** Problems: it is a common English word; it is a 2008 television series; it says nothing about this world or this city; it does not sound like a place you want to spend forty hours.
-
-**Requirements for a world-class title:** one word (or two), reads on a box, sounds like a place, hints at the story, survives being said out loud in a trailer.
-
-| Candidate | Why it works | Risk |
-|---|---|---|
-| **CINDERFALL** ⭐ | The city is Cinder City. The city is built on ash and burning. One word, cinematic, grand. Reads like a AAA title. Gives the world a name. | — |
-| **CINDER CITY** | Place-first, instantly understood, GTA-style. | Slightly plain |
-| **THE LEDGER** | The torn ledger is the story's spine. Crime-thriller, film-like, elegant. | Less memorable in a store |
-| **LEVERAGE: CINDER CITY** | Keeps your name, adds the world. | Keeps the generic problem |
-
-**My recommendation: CINDERFALL.** — *"CINDERFALL — A Cinder City Story."* The city has a name, the game has a name, and the two reinforce each other forever.
+**Protagonist: Marcus Adeyemi.** His brother **Chidi** is kidnapped. Marcus comes home to pay a debt he did not create.
 
 ### 1.3 The city: Cinder City
 
@@ -167,7 +150,7 @@ This is the most important script in the game. It decides whether anyone is stil
 |---|---|
 | **0:00** | Black. Rain on zinc. A radio newsreader: *"…the body found near the rail platform. Police are not releasing a name."* |
 | **0:08** | **D'YOUNGS GAMES** — 3D logo assembles from ash |
-| **0:14** | **CINDERFALL** — title, ash drifting across the letterforms |
+| **0:14** | **LEVERAGE** — title, ash drifting across the letterforms, "EVERYBODY HAS SOMETHING ON YOU" beneath |
 | **0:22** | Cinematic. A bus pulls into Ash Row at dawn. Emeka's hands. A folded letter. ₦120 in his pocket. Twenty seconds of no dialogue — just the city breathing |
 | **1:10** | **CUT TO PLAYABLE.** He steps off. No UI clutter. One prompt: *Walk.* |
 | **1:40** | Ngozi's kitchen. Warm light, steam, a plate. She gives him the problem: Chidi owes ₦4.2 million |
@@ -263,7 +246,7 @@ Eight phases. Each ends with something you can watch or play, not a status repor
 
 Before I write a line of code:
 
-1. **The game name.** CINDERFALL (recommended) · CINDER CITY · THE LEDGER · keep LEVERAGE
+1. ~~The game name~~ — **LOCKED: LEVERAGE** (user canon)
 2. **The district rename.** Cinder Line → RAILHEAD. Yes or no.
 3. **The studio logo direction.** I have rendered concepts — pick the one that feels like you.
 4. **Tone.** How far into the dark? *Mafia* cold and quiet, or *Devil May Cry* loud and stylish? My recommendation: **quiet world, loud combat.** The city is grim; the fighting is operatic. That contrast is the identity.
