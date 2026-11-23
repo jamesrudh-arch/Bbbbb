@@ -57,6 +57,7 @@ func _ready() -> void:
 
 	hud.setup(self)
 	hud.set_district(Content.district_name(Game.current_district))
+	_wire_phone()
 	world_streamer.setup(self, districts)
 	traffic.setup(self, districts)
 	npcs.setup(self, districts)
@@ -103,6 +104,15 @@ func _update_district() -> void:
 		Game.notify(Content.district_name(best), "district")
 		hud.set_district(Content.district_name(best))
 		Events.record("district_enter", {"district": best})
+
+## Phone scheduling: calls and messages are gated on story state.
+var phone_system: Node = null
+
+func _wire_phone() -> void:
+	phone_system = load("res://scripts/systems/phone_system.gd").new()
+	phone_system.name = "PhoneSystem"
+	add_child(phone_system)
+	phone_system.setup(self)
 
 func _apply_time() -> void:
 	var h: float = Game.hour

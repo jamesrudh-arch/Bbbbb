@@ -152,7 +152,33 @@ func play_at(id: String, pos: Vector3, pitch: float = 1.0, volume_db: float = 0.
 	p.play()
 	p.finished.connect(p.queue_free)
 
+## Loops a phone ringtone until stop_stinger() is called.
+var _ring_player: AudioStreamPlayer = null
+
+func play_ringtone() -> void:
+	if _ring_player == null:
+		_ring_player = AudioStreamPlayer.new()
+		_ring_player.bus = "Master"
+		add_child(_ring_player)
+	var path := "res://audio/ui/ringtone.wav"
+	if not ResourceLoader.exists(path):
+		path = "res://audio/music/stinger_alert.wav"
+	if not ResourceLoader.exists(path):
+		return
+	_ring_player.stream = load(path)
+	_ring_player.volume_db = -6.0
+	if _ring_player.stream is AudioStreamWAV:
+		(_ring_player.stream as AudioStreamWAV).loop_mode = AudioStreamWAV.LOOP_FORWARD
+	_ring_player.play()
+
+func stop_stinger() -> void:
+	if _ring_player != null and _ring_player.playing:
+		_ring_player.stop()
+
 func play_stinger(id: String) -> void:
+	if id == "phone":
+		play_ringtone()
+		return
 	var map := {
 		"alert": "res://audio/music/stinger_alert.wav",
 		"mission": "res://audio/music/stinger_mission.wav",

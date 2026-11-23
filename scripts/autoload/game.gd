@@ -76,6 +76,12 @@ var known_radio: Array = ["r1", "r2", "r3"]
 # ---------------- mission ----------------
 var mission: Dictionary = {}
 
+# --- phone state ---------------------------------------------------------
+var call_log: Array = []        # [{from, id, answered, at}]
+var missed_calls: Array = []    # [call_id]
+var messages: Dictionary = {}   # cid -> [{text, read, at}]
+var current_call := ""
+
 func _ready() -> void:
 	DirAccess.make_dir_recursive_absolute("user://saves")
 
@@ -134,6 +140,23 @@ func clear_heat() -> void:
 	wanted_changed.emit(0)
 
 # =========================================================== flags
+## Record an incoming/outgoing message for a contact.
+func push_message(cid: String, text: String) -> void:
+	if not messages.has(cid):
+		messages[cid] = []
+	messages[cid].append({"text": text, "read": false, "at": hour})
+	messages_updated.emit()
+
+signal messages_updated
+
+## Mark a thread read.
+func read_messages(cid: String) -> void:
+	if not messages.has(cid):
+		return
+	for m in messages[cid]:
+		m["read"] = true
+	messages_updated.emit()
+
 func set_flag(flag: String, value: bool = true) -> void:
 	flags[flag] = value
 

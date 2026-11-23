@@ -1,6 +1,7 @@
 extends CanvasLayer
 
 const MAP_VIEW := preload("res://scripts/ui/world_map.gd")
+const PHONE_VIEW := preload("res://scripts/ui/phone.gd")
 ## HUD — touch-first interface for iPhone/XOGOT.
 ## Layout is anchored in a 1280x720 safe design space (canvas_items stretch), so
 ## every control keeps its physical size and thumb reach across iPhone sizes.
@@ -813,51 +814,31 @@ func open_shop(vendor_id: String) -> void:
 
 func _build_phone() -> void:
 	_phone = _fullscreen_overlay()
-	var p := _panel(Color(0.045, 0.05, 0.062, 0.98), 20)
-	p.set_anchors_preset(Control.PRESET_CENTER)
-	p.position = Vector2(-200, -290)
-	p.custom_minimum_size = Vector2(400, 580)
+	var p := PHONE_VIEW.new()
+	p.name = "PhoneDevice"
+	p.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_phone.add_child(p)
-	phone_vbox = VBoxContainer.new()
-	phone_vbox.add_theme_constant_override("separation", 8)
-	p.add_child(phone_vbox)
+	p.setup(self, world)
+	_phone_dev = p
+	_phone.visible = false
 
-var phone_vbox: VBoxContainer
+var _phone_dev = null
 
 func toggle_phone() -> void:
 	if _phone == null: return
 	_phone.visible = not _phone.visible
-	if not _phone.visible: return
-	for c in phone_vbox.get_children(): c.queue_free()
-	phone_vbox.add_child(_label("LEVERAGE OS", 12, GOLD_DIM))
-	phone_vbox.add_child(_label("PHONE", 26, GOLD))
-	phone_vbox.add_child(_label("Contact list · Radio · Map", 12, TEXT_DIM))
-	var sep := HSeparator.new()
-	phone_vbox.add_child(sep)
-	# 16 contacts do not fit a phone screen — put them in a fixed-height scroller.
-	var scroll := ScrollContainer.new()
-	scroll.custom_minimum_size = Vector2(0, 320)
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	var list := VBoxContainer.new()
-	list.add_theme_constant_override("separation", 6)
-	list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	scroll.add_child(list)
-	phone_vbox.add_child(scroll)
-	for cid in Content.CHARACTERS:
-		var c: Dictionary = Content.CHARACTERS[cid]
-		var b := _btn(c["name"], 13)
-		var cdata := c
-		b.pressed.connect(func():
-			show_dialogue(cdata["name"], _contact_line(str(cdata["bio"])))
-		)
-		list.add_child(b)
-	var radio_btn := _btn("RADIO", 14)
-	radio_btn.pressed.connect(func(): _cycle_radio())
-	phone_vbox.add_child(radio_btn)
-	var close := _btn("PUT AWAY", 14)
-	close.pressed.connect(func(): _phone.visible = false)
-	phone_vbox.add_child(close)
+	if _phone.visible and _phone_dev != null:
+		_phone_dev.show_home()
+
+## Route an incoming call to the phone device.
+func ring_phone(call_id: String) -> void:
+	if _phone_dev == null: return
+	_phone.visible = true
+	_phone_dev.ring(call_id)
+
+## Non-blocking one-line notice in the corner.
+func show_toast(text: String) -> void:
+	notify(text, "info")
 
 func _contact_line(bio: String) -> String:
 	return bio

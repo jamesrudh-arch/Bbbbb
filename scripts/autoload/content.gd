@@ -439,6 +439,102 @@ const SHOP_ITEMS := {
 }
 
 # ============================================================ RADIO
+## ---------------------------------------------------------------- PHONE
+## Call scripts. Each entry is a conversation: who is calling, what they say,
+## and (optionally) what story flag it sets or mission it unlocks. `once` calls
+## fire a single time per save; `repeatable` ones can recur.
+const CALLS := {
+	"ngozi_checkin": {
+		"from": "ngozi", "title": "Mama Ngozi", "once": true,
+		"lines": [
+			["ngozi", "Emeka. You eating?"],
+			["emeka", "I'm handling something."],
+			["ngozi", "That's not what I asked you."],
+			["emeka", "Not yet."],
+			["ngozi", "Come by the kitchen. Bring your appetite, not your problems."],
+		],
+		"flag": "ngozi_checked_in",
+	},
+	"chidi_warning": {
+		"from": "chidi", "title": "Chidi", "once": true,
+		"lines": [
+			["chidi", "They know you're looking."],
+			["emeka", "Where are you?"],
+			["chidi", "Somewhere with a bad door and worse people."],
+			["emeka", "Stay there. I'm coming."],
+			["chidi", "Don't. Not yet. They want you to come."],
+		],
+		"flag": "chidi_called",
+	},
+	"tunde_garage": {
+		"from": "tunde", "title": "Tunde Bello", "once": true,
+		"lines": [
+			["tunde", "There's a container down here that never got manifested."],
+			["emeka", "Whose?"],
+			["tunde", "Meridian's. But the crane clerk signed it over to nobody."],
+			["emeka", "Nobody has a name?"],
+			["tunde", "Nobody has a name. Come see for yourself."],
+		],
+		"flag": "tunde_tipped",
+	},
+	"ada_invite": {
+		"from": "ada", "title": "Ada Meridian", "once": true,
+		"lines": [
+			["ada", "You've been asking about a ledger."],
+			["emeka", "You've been listening."],
+			["ada", "I'm in the business of knowing. Lobby of the tower. Come alone."],
+		],
+		"flag": "ada_invited",
+	},
+	"warning_from_mara": {
+		"from": "mara", "title": "Mara", "once": false,
+		"lines": [
+			["mara", "You're making a mess in my district."],
+			["emeka", "It was already messy."],
+			["mara", "Then I'll know who to bill for it."],
+		],
+	},
+	"kola_threat": {
+		"from": "kola", "title": "Kola", "once": true,
+		"lines": [
+			["kola", "Your brother's note is due."],
+			["emeka", "Chidi signed it, not me."],
+			["kola", "You're standing in the same house, aren't you."],
+			["emeka", "Come find out."],
+		],
+		"flag": "kola_threatened",
+	},
+	"police_warning": {
+		"from": "okafor", "title": "Insp. Okafor", "once": false,
+		"lines": [
+			["okafor", "You've got heat on you, Obi."],
+			["emeka", "You put it there."],
+			["okafor", "I'm the only reason it hasn't gone to arrest. Keep it that way."],
+		],
+	},
+}
+
+## Message threads. `at` is game-hour at which the message lands.
+const MESSAGES := {
+	"ngozi": [
+		{"at": 8.0, "text": "There's a plate in the pot. Don't make me look for you."},
+		{"at": 20.0, "text": "Chidi's been gone three days. You want me to worry alone?"},
+	],
+	"chidi": [
+		{"at": 21.0, "text": "don't call this number back. delete this."},
+		{"at": 21.5, "text": "the container is real. ask tunde. i'm sorry."},
+	],
+	"tunde": [
+		{"at": 9.0, "text": "Iron Yard gate's open till 6. After that you're climbing."},
+	],
+	"ada": [
+		{"at": 14.0, "text": "Meridian Tower, 34th floor. Ask for me by name and nobody searches you."},
+	],
+	"eze": [
+		{"at": 12.0, "text": "Found something for you. Bring cash, not questions."},
+	],
+}
+
 const RADIO := {
 	"stations": [
 		{"id": "city", "name": "93.7 Cinder FM", "desc": "Talk, traffic, and the occasional body count."},
