@@ -116,16 +116,57 @@ None blocking. Remaining gaps are scope (D-101 story missions) and environment l
 5. If the animation library looks wrong after changing clips, delete
    `user://anim_lib_cache.res`.
 
+## 6b. Latest session — phone system (DONE) + push blocked
+
+**Completed and committed locally (`01503ab`):**
+
+- `scripts/systems/phone_system.gd` — story-state call scheduler. Triggers read
+  `Game.hour`, `Game.wanted`, and story flags. Calls are gated by a 45 s gap, a
+  6 s quiet window after combat ends, and a `_fired` map so `once` calls never repeat.
+  Messages deliver as the in-game clock passes their scheduled hour.
+- `scripts/ui/phone.gd` — four screens (HOME, CALL_SCREEN, THREADS, CONVO),
+  pulsing incoming-call avatar with ANSWER/DECLINE, call history, unread badges,
+  read/unread thread state, timestamps.
+- `scripts/autoload/game.gd` — added `call_log`, `missed_calls`, `messages`,
+  `current_call`, `push_message()`, `read_messages()`, `messages_updated` signal.
+- `scripts/autoload/audio_director.gd` — `play_ringtone()` loops
+  `audio/ui/ringtone.wav` (2.68 s two-tone trill, generated); `stop_stinger()`.
+- `scripts/ui/hud.gd` — old contact-list phone deleted, replaced by `PHONE_VIEW`;
+  new `ring_phone(call_id)` and `show_toast(text)`.
+
+**Verified by runtime probe (headless):** ring → answer → 5-line conversation →
+flag set → messages delivered (`chidi=1`, `ngozi=2`) → decline records 1 missed
+call → threads screen opens. All 7 output lines clean.
+
+**Verified visually (`shots/phone_ring.png`, `phone_home.png`, `phone_convo.png`):**
+incoming call card with gold avatar and red/green buttons; home screen with
+CALLS / MESSAGES / RADIO; conversation with speaker name and CONTINUE.
+Fixed during this pass: `_clear()` used `queue_free()` only, so the previous
+screen rendered one extra frame on top of the new one — now `remove_child()`
+first. Added an opaque glass bed so the world no longer shows through the device.
+
+**Tests:** `PASSED: 112  FAILED: 0`. **Syntax:** `REAL ERRORS: 0`.
+
+**PUSH BLOCKED.** Four commits are local; `origin` is still at `c18871e`.
+`git push` returns `could not read Username for 'https://github.com'`. The PAT
+used earlier was scrubbed from the remote and was never revoked, so it must not
+be reused. **A fresh token is required to push.** Local commits:
+`f76bdfb`, `69fc8d8`, `13b0532`, `01503ab`.
+
 ## 7. Exact next action
 
-**Highest-value remaining work, in order:**
+**In order:**
 
-1. **Script `m03_block`** — the next story mission after `m02_debt`. Add a bespoke
-   sequence in `mission_manager.gd` (three paid jobs in Ash Row / Guttermarket with
-   placed NPCs and dialogue), then `m04_offer`.
-2. **Integration-test save/load** — write a run that positions the player, saves to slot 0,
-   reloads the scene, loads slot 0, and asserts position/money/heat restored (D-107).
-3. ~~Verify firearms~~ — **DONE**: pistol 80→58→36 HP, ammo 24→23→22 (TR-05).
-4. **iPhone pass** — install via XOGOT, measure frame time in Neon Mile at night (the
-   heaviest scene), verify safe-area insets and touch targets, record results in
-   `docs/13_TEST_REPORTS.md`.
+1. **Push** — needs a fresh GitHub token for `jamesrudh-arch/Bbbbb`. All four commits
+   are staged and clean; `git push origin HEAD` once credentials are supplied.
+2. **Trigger phone calls from story beats.** `PhoneSystem` works but nothing calls
+   `hud.ring_phone()` from `mission_manager` yet. Add a `ring_phone` step on mission
+   start/completion so the 7 written call scripts actually fire in play.
+3. **Mission 3 (`m03_block`)** — dependent systems now exist for it: phone (calls),
+   map (routing), combat (5 disciplines). Author the bespoke sequence.
+4. **Vehicles** — still Kenney placeholders (~2k tris). This is the biggest single
+   deviation from the "realistic" criterion and needs a proper source.
+5. **District differentiation** — six districts still share one palette family.
+6. **Integration-test save/load** (D-107).
+7. **iPhone pass** — XOGOT install, frame timing in Neon Mile at night, safe-area
+   insets, touch targets. Record in `docs/13_TEST_REPORTS.md`.
