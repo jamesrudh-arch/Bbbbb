@@ -1,0 +1,109 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="820" viewBox="0 0 1400 820">
+<defs>
+<linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#08090c"/><stop offset="100%" stop-color="#101419"/></linearGradient>
+<linearGradient id="gold" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#8a6a2a"/><stop offset="50%" stop-color="#e8b64c"/><stop offset="100%" stop-color="#8a6a2a"/></linearGradient>
+<filter id="g"><feGaussianBlur stdDeviation="8" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+</defs>
+<rect width="1400" height="820" fill="url(#bg)"/>
+
+<text x="60" y="58" fill="#e8b64c" font-family="Helvetica,Arial" font-size="24" font-weight="bold" letter-spacing="6">THE FIRST TEN MINUTES</text>
+<text x="60" y="84" fill="#4e5763" font-family="Helvetica,Arial" font-size="12" letter-spacing="3">LEVERAGE · ONBOARDING SEQUENCE · nothing after this is explained twice</text>
+
+<line x1="120" y1="120" x2="120" y2="760" stroke="#2a3038" stroke-width="2"/>
+
+<!-- beats -->
+<g font-family="Helvetica,Arial">
+<!-- 0:00 -->
+<circle cx="120" cy="150" r="7" fill="#3a4149" stroke="#5a6573" stroke-width="2"/>
+<text x="150" y="145" fill="#6b7684" font-size="11" letter-spacing="2">0:00</text>
+<text x="150" y="166" fill="#cfd8e3" font-size="14" font-weight="bold">Black. Rain on zinc.</text>
+<text x="150" y="185" fill="#7d8794" font-size="12">A radio: "…body found near the rail platform. Police are not releasing a name."</text>
+
+<!-- 0:08 logo -->
+<circle cx="120" cy="220" r="9" fill="#e8b64c" filter="url(#g)"/>
+<text x="150" y="215" fill="#e8b64c" font-size="11" letter-spacing="2">0:08</text>
+<text x="150" y="236" fill="#f0dcae" font-size="14" font-weight="bold">D'YOUNGS GAMES — 3D LOGO</text>
+<text x="150" y="255" fill="#7d8794" font-size="12">Ash particles converge into the D·Y monogram. Gold light-sweep. Sub-bass hit.</text>
+
+<!-- 0:14 title -->
+<circle cx="120" cy="290" r="9" fill="#e8b64c" filter="url(#g)"/>
+<text x="150" y="285" fill="#e8b64c" font-size="11" letter-spacing="2">0:14</text>
+<text x="150" y="306" fill="#f0dcae" font-size="14" font-weight="bold">LEVERAGE — TITLE CARD</text>
+<text x="150" y="325" fill="#7d8794" font-size="12">Ash drifts across the letterforms. "EVERYBODY HAS SOMETHING ON YOU."</text>
+
+<!-- 0:26 cinematic -->
+<circle cx="120" cy="360" r="7" fill="#3a4149" stroke="#5a6573" stroke-width="2"/>
+<text x="150" y="355" fill="#6b7684" font-size="11" letter-spacing="2">0:26</text>
+<text x="150" y="376" fill="#cfd8e3" font-size="14" font-weight="bold">CINEMATIC — 60 SECONDS</text>
+<text x="150" y="395" fill="#7d8794" font-size="12">Cinder City at dawn. A bus. Marcus's hands. A folded letter. Nine days of missed calls.</text>
+<text x="150" y="413" fill="#5a6472" font-size="11">Slow dolly · rack focus · no dialogue for the first 20 s</text>
+
+<!-- 1:30 playable -->
+<rect x="108" y="432" width="24" height="24" rx="4" fill="#2a4a2a" stroke="#6fc47f" stroke-width="2"/>
+<text x="150" y="442" fill="#6fc47f" font-size="11" letter-spacing="2" font-weight="bold">1:30 — PLAYABLE BEGINS</text>
+<text x="150" y="462" fill="#d8f0dc" font-size="14" font-weight="bold">He steps off the bus.</text>
+<text x="150" y="481" fill="#8fa898" font-size="12">No UI clutter. One prompt: WALK. Camera swings behind him.</text>
+
+<!-- 3:20 fight -->
+<rect x="108" y="502" width="24" height="24" rx="4" fill="#4a2020" stroke="#e06060" stroke-width="2"/>
+<text x="150" y="512" fill="#e06060" font-size="11" letter-spacing="2" font-weight="bold">3:20 — FIRST FIGHT</text>
+<text x="150" y="532" fill="#f0d8d8" font-size="14" font-weight="bold">Two men burning his brother's ledger pages.</text>
+<text x="150" y="551" fill="#a89090" font-size="12">Combat taught inside the fight itself. No tutorial boxes. Punch · Heavy · Kick · Dodge.</text>
+
+<!-- 4:30 rank -->
+<rect x="108" y="572" width="24" height="24" rx="4" fill="#4a3a10" stroke="#e8b64c" stroke-width="2"/>
+<text x="150" y="582" fill="#e8b64c" font-size="11" letter-spacing="2" font-weight="bold">4:30 — STYLE RANK APPEARS</text>
+<text x="150" y="602" fill="#f0dcae" font-size="14" font-weight="bold">"D — DEAD WEIGHT"</text>
+<text x="150" y="621" fill="#a89870" font-size="12">The game tells him what kind of fighter he currently is. Now he wants to be better.</text>
+
+<!-- 5:00 phone -->
+<circle cx="120" cy="660" r="7" fill="#3a4149" stroke="#5a6573" stroke-width="2"/>
+<text x="150" y="655" fill="#6b7684" font-size="11" letter-spacing="2">5:00</text>
+<text x="150" y="676" fill="#cfd8e3" font-size="14" font-weight="bold">THE PHONE RINGS</text>
+<text x="150" y="695" fill="#7d8794" font-size="12">Real ringtone · ANSWER / DECLINE · the first voice in the game.</text>
+
+<!-- 6:00 sirens -->
+<circle cx="120" cy="730" r="7" fill="#3a4149" stroke="#5a6573" stroke-width="2"/>
+<text x="150" y="725" fill="#6b7684" font-size="11" letter-spacing="2">6:00</text>
+<text x="150" y="746" fill="#cfd8e3" font-size="14" font-weight="bold">SIRENS — first heat, first chase</text>
+<text x="150" y="765" fill="#7d8794" font-size="12">On foot, over zinc roofs. Then escape. Then rain on neon.</text>
+</g>
+
+<!-- right panel: minimap spec -->
+<g>
+<rect x="880" y="120" width="460" height="330" rx="6" fill="#0d1015" stroke="#2a3038" stroke-width="1.5"/>
+<text x="904" y="152" fill="#e8b64c" font-family="Helvetica,Arial" font-size="14" font-weight="bold" letter-spacing="3">MINIMAP — TO BUILD</text>
+<text x="904" y="176" fill="#6b7684" font-family="Helvetica,Arial" font-size="11">Status today: declared, never filled. No minimap in play.</text>
+<line x1="904" y1="190" x2="1316" y2="190" stroke="#242a32"/>
+
+<g font-family="Helvetica,Arial" font-size="12">
+<circle cx="918" cy="214" r="5" fill="#e8b64c"/><text x="936" y="219" fill="#9aa4b0">Mission marker — gold pulse</text>
+<circle cx="918" cy="242" r="5" fill="#4ea0e0"/><text x="936" y="247" fill="#9aa4b0">Safehouse — blue</text>
+<circle cx="918" cy="270" r="5" fill="#6fc47f"/><text x="936" y="275" fill="#9aa4b0">Shop / interior — green</text>
+<circle cx="918" cy="298" r="5" fill="#e06060"/><text x="936" y="303" fill="#9aa4b0">Fight ring venue — red</text>
+<circle cx="918" cy="326" r="5" fill="#e08a40"/><text x="936" y="331" fill="#9aa4b0">Bounty target — orange</text>
+<circle cx="918" cy="354" r="5" fill="#60a8e8"/><text x="936" y="359" fill="#9aa4b0">Police — blue, flashing at heat 3+</text>
+<circle cx="918" cy="382" r="5" fill="#4ec4cc"/><text x="936" y="387" fill="#9aa4b0">Phone call source — cyan</text>
+<circle cx="918" cy="410" r="5" fill="#e8e8e8"/><text x="936" y="415" fill="#9aa4b0">Player arrow — rotates with facing</text>
+</g>
+<text x="904" y="438" fill="#5a6472" font-family="Helvetica,Arial" font-size="11">Rotates with camera · zooms out when driving fast</text>
+</g>
+
+<!-- right panel 2: GPS -->
+<g>
+<rect x="880" y="476" width="460" height="270" rx="6" fill="#0d1015" stroke="#2a3038" stroke-width="1.5"/>
+<text x="904" y="508" fill="#e8b64c" font-family="Helvetica,Arial" font-size="14" font-weight="bold" letter-spacing="3">GPS — ON THE ROAD</text>
+<line x1="904" y1="522" x2="1316" y2="522" stroke="#242a32"/>
+<g font-family="Helvetica,Arial" font-size="12">
+<rect x="914" y="540" width="10" height="10" rx="2" fill="#e8b64c"/><text x="936" y="549" fill="#9aa4b0">Gold line painted along the asphalt</text>
+<rect x="914" y="568" width="10" height="10" rx="2" fill="#e8b64c"/><text x="936" y="577" fill="#9aa4b0">Turn arrows 30 m before a junction</text>
+<rect x="914" y="596" width="10" height="10" rx="2" fill="#e8b64c"/><text x="936" y="605" fill="#9aa4b0">Distance + ETA: 412 m · 1m 20s</text>
+<rect x="914" y="624" width="10" height="10" rx="2" fill="#e8b64c"/><text x="936" y="633" fill="#9aa4b0">Recalculates within 12 m off-route</text>
+<rect x="914" y="652" width="10" height="10" rx="2" fill="#e8b64c"/><text x="936" y="661" fill="#9aa4b0">Cars route wide; on foot may cut through</text>
+<rect x="914" y="680" width="10" height="10" rx="2" fill="#e8b64c"/><text x="936" y="689" fill="#9aa4b0">Tap map to set a custom waypoint</text>
+</g>
+<text x="904" y="722" fill="#5a6472" font-family="Helvetica,Arial" font-size="11">Route data already exists in world_map.gd — the HUD never draws it</text>
+</g>
+
+<text x="60" y="800" fill="#363d45" font-family="Helvetica,Arial" font-size="11">D'YOUNGS GAMES · LEVERAGE · onboarding + navigation spec · internal</text>
+</svg>
