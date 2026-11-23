@@ -8,13 +8,14 @@ const VEHICLE_LENGTH := 8.2
 
 @export var yaw_speed := 4.4
 @export var pitch_speed := 2.6
-@export var pitch_min := -0.42
-@export var pitch_max := 0.36
-## Default view tilt. Negative X rotation raises the camera above the shoulder and
-## aims it down at the player, which puts the horizon above centre and the player in
-## the lower third — standard third-person action framing.
-@export var pitch := -0.13
-@export var follow_height := 1.58
+@export var pitch_min := -0.30
+@export var pitch_max := 0.62
+## Default view tilt. The SpringArm extends along the rig's +Z with the camera
+## looking back down it, so a POSITIVE X rotation lifts the camera above the
+## shoulder and aims it down at the player. That puts the horizon above centre and
+## the player in the lower third — standard third-person action framing.
+@export var pitch := 0.17
+@export var follow_height := 1.46
 @export var follow_smoothing := 9.0
 @export var auto_recentre := 0.35
 

@@ -43,6 +43,7 @@ func build_district(id: String) -> Node3D:
 	_build_street_furniture(root, id, info, rng)
 	_build_props(root, id, info, rng)
 	_build_parked_vehicles(root, id, info, rng)
+	_build_street_litter(root, id, info, rng)
 	_build_landmarks(root, id, info, rng)
 	_build_nav(root, id)
 	_build_drive_graph(root, id)
@@ -72,7 +73,9 @@ func _build_ground(root: Node3D, info: Dictionary, _rng: RandomNumberGenerator) 
 	var box := BoxShape3D.new()
 	box.size = Vector3(150, 0.4, 150)
 	shape.shape = box
-	shape.position = Vector3(0, -0.2, 0)
+	# Top of this box sits at y = -0.02, just under the visible plane, so the
+	# capsule rests on the surface instead of sinking into it.
+	shape.position = Vector3(0, -0.22, 0)
 	body.add_child(shape)
 
 # ---------------------------------------------------------------- roads
@@ -103,27 +106,34 @@ func _build_roads(root: Node3D, id: String, info: Dictionary, rng: RandomNumberG
 		vt.position = Vector3(i * BLOCK, 0.04, 0)
 		road_root.add_child(vt)
 
-	# Lane markings
+	# --- road markings ---------------------------------------------------
+	# One batched mesh for the whole network. Loose meshes here cost ~90 draw
+	# calls per district for what is ultimately a single painted surface.
 	var paint := StandardMaterial3D.new()
-	paint.albedo_color = Color(0.78, 0.74, 0.55)
+	paint.albedo_color = Color(0.80, 0.77, 0.62)
+	paint.roughness = 0.62
 	paint.emission_enabled = true
 	paint.emission = Color(0.9, 0.86, 0.6)
-	paint.emission_energy_multiplier = 0.25
+	paint.emission_energy_multiplier = 0.16
+	var bat = BATCHER.new()
+	# dashed lane dividers + solid edge lines along both axes
 	for i in range(-3, 4):
-		var m1 := MeshInstance3D.new()
-		var mb1 := BoxMesh.new()
-		mb1.size = Vector3(2.4, 0.02, 0.22)
-		m1.mesh = mb1
-		m1.material_override = paint
-		m1.position = Vector3(i * 18.0, 0.09, BLOCK)
-		road_root.add_child(m1)
-		var m2 := MeshInstance3D.new()
-		var mb2 := BoxMesh.new()
-		mb2.size = Vector3(0.22, 0.02, 2.4)
-		m2.mesh = mb2
-		m2.material_override = paint
-		m2.position = Vector3(BLOCK, 0.09, i * 18.0)
-		road_root.add_child(m2)
+		for t in range(-6, 7):
+			# horizontal street dashes
+			bat.add_box(Vector3(2.6, 0.02, 0.20), Vector3(t * 11.0, 0.095, i * BLOCK), paint)
+			# vertical street dashes
+			bat.add_box(Vector3(0.20, 0.02, 2.6), Vector3(i * BLOCK, 0.095, t * 11.0), paint)
+		# solid edge lines both sides of each street
+		for side in [-1.0, 1.0]:
+			bat.add_box(Vector3(146, 0.02, 0.12), Vector3(0, 0.095, i * BLOCK + side * (ROAD_W * 0.5 - 0.7)), paint)
+			bat.add_box(Vector3(0.12, 0.02, 146), Vector3(i * BLOCK + side * (ROAD_W * 0.5 - 0.7), 0.095, 0), paint)
+	# crossing bars at every junction
+	for ix in range(-3, 4):
+		for iz in range(-3, 4):
+			for k in range(-3, 4):
+				bat.add_box(Vector3(0.5, 0.02, 3.0),
+					Vector3(ix * BLOCK + k * 0.95, 0.096, iz * BLOCK + (ROAD_W * 0.5 + 1.6)), paint)
+	bat.commit(road_root)
 
 	# Neon when tier is high — the night identity of Vesper / Neon Mile
 	if int(info["tier"]) >= 3:
@@ -447,6 +457,10 @@ func _box_mesh(size: Vector3, offset: Vector3, mat: Material) -> MeshInstance3D:
 	mi.position = offset
 	return mi
 
+## RandomNumberGenerator has no choice(); this is the equivalent.
+func _pick(rng: RandomNumberGenerator, arr: Array):
+	return arr[rng.randi_range(0, arr.size() - 1)]
+
 func _mat(color: Color, roughness: float = 0.8) -> StandardMaterial3D:
 	var m := StandardMaterial3D.new()
 	m.albedo_color = color
@@ -684,6 +698,72 @@ func _build_landmarks(root: Node3D, id: String, info: Dictionary, rng: RandomNum
 		pl.shadow_enabled = false
 		pl.position = Vector3(0, 4.2, 7.0)
 		node.add_child(pl)
+
+## Ground-level clutter: litter, cardboard, oil stains, drains, hydrants, bollards
+## and second-hand shop crates. All merged into one mesh per district so the whole
+## pass costs a couple of draw calls. This is the detail that separates a street
+## from a set of boxes on a plane.
+func _build_street_litter(root: Node3D, id: String, info: Dictionary, rng: RandomNumberGenerator) -> void:
+	var pal: Dictionary = info["palette"]
+	var holder := Node3D.new()
+	holder.name = "Litter"
+	root.add_child(holder)
+	var bat = BATCHER.new()
+
+	var paper := _mat(Color(0.70, 0.68, 0.62), 0.95)
+	var card := _mat(Color(0.50, 0.38, 0.24), 0.94)
+	var plastic := _mat(Color(0.32, 0.36, 0.34), 0.72)
+	var steel := _mat(Color(0.42, 0.44, 0.47), 0.55)
+	var hydrant := _mat(Color(0.55, 0.13, 0.11), 0.75)
+	var oil := _mat(Color(0.035, 0.035, 0.04), 0.42)
+
+	# Oil stains and drains on the carriageway
+	for i in 34:
+		var sx := rng.randf_range(-72, 72)
+		var sz := rng.randf_range(-72, 72)
+		bat.add_box(Vector3(rng.randf_range(0.6, 2.2), 0.012, rng.randf_range(0.5, 1.8)),
+			Vector3(sx, 0.088, sz), oil)
+	for i in 10:
+		var dz: float = _pick(rng, [-1.0, 1.0]) * BLOCK
+		bat.add_box(Vector3(1.5, 0.05, 0.7),
+			Vector3(rng.randf_range(-60, 60), 0.10, dz + _pick(rng, [-1.0, 1.0]) * (ROAD_W * 0.5 - 0.9)), steel)
+
+	# Litter along the kerb line
+	for i in 90:
+		var along := rng.randf_range(-70, 70)
+		var lane: float = _pick(rng, [-1.0, 1.0]) * (ROAD_W * 0.5 + rng.randf_range(0.4, 2.4))
+		var block: float = float(rng.randi_range(-1, 1)) * BLOCK
+		var mat := paper if rng.randf() > 0.55 else (card if rng.randf() > 0.4 else plastic)
+		var sz2 := Vector3(rng.randf_range(0.16, 0.5), rng.randf_range(0.01, 0.14), rng.randf_range(0.16, 0.5))
+		if rng.randf() > 0.5:
+			bat.add_box(sz2, Vector3(along, 0.10, block + lane), mat)
+		else:
+			bat.add_box(Vector3(sz2.x, sz2.y, sz2.z), Vector3(block + lane, 0.10, along), mat)
+
+	# Hydrants, bollards, crates and cardboard stacks against the shopfronts
+	for i in 14:
+		var px: float = rng.randf_range(-70, 70)
+		var pz: float = float(rng.randi_range(-1, 1)) * BLOCK + _pick(rng, [-1.0, 1.0]) * (ROAD_W * 0.5 + SIDEWALK_W * 0.6)
+		bat.add_box(Vector3(0.22, 0.62, 0.22), Vector3(px, 0.31, pz), hydrant)
+		bat.add_box(Vector3(0.30, 0.10, 0.30), Vector3(px, 0.66, pz), hydrant)
+	for i in 26:
+		var px2 := rng.randf_range(-70, 70)
+		var pz2: float = float(rng.randi_range(-1, 1)) * BLOCK + _pick(rng, [-1.0, 1.0]) * (ROAD_W * 0.5 + SIDEWALK_W * 0.4)
+		bat.add_box(Vector3(0.16, 0.85, 0.16), Vector3(px2, 0.42, pz2), steel)
+	for i in 12:
+		var px3 := rng.randf_range(-68, 68)
+		var pz3: float = float(rng.randi_range(-1, 1)) * BLOCK + _pick(rng, [-1.0, 1.0]) * (ROAD_W * 0.5 + SIDEWALK_W * 0.9)
+		var stack_h := rng.randi_range(1, 3)
+		for k in stack_h:
+			bat.add_box(Vector3(0.62, 0.44, 0.44), Vector3(px3, 0.22 + k * 0.45, pz3), card)
+
+	# Utility cabinets and AC units against the walls
+	for i in 18:
+		var px4 := rng.randf_range(-68, 68)
+		var pz4: float = float(rng.randi_range(-1, 1)) * BLOCK + _pick(rng, [-1.0, 1.0]) * (ROAD_W * 0.5 + SIDEWALK_W * 0.92)
+		bat.add_box(Vector3(0.7, 1.1, 0.35), Vector3(px4, 0.55, pz4), steel)
+
+	bat.commit(holder)
 
 func _kit_models(kit: String) -> Array:
 	return []

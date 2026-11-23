@@ -47,3 +47,25 @@ locomotion trick and reads correctly at gameplay distance.
 `scenes/dev_clipsheet.tscn` renders eight clips in a 4x2 grid of own-world
 SubViewports and writes a contact sheet — this is how the clip set was judged, and
 it should be re-run after any change to the baker.
+
+## Static batching (draw calls)
+`scripts/world/mesh_batcher.gd` expands every box/quad a building emits into
+vertices in the parent's space and buckets by material, producing one ArrayMesh
+per material. Buildings, road markings and the street-litter pass all use it.
+Effect: **17,087 -> 7,474 mesh instances (-56%)** across the six districts, with
+no visual difference. This is the biggest single iPhone frame-time win in the
+project and it also brought the software renderer back inside a usable window.
+
+## Terrain / collision notes
+- The ground collider's top face sits at y = -0.02, just under the visible plane,
+  so the capsule rests on the surface rather than sinking into it.
+- `RandomNumberGenerator` has **no `choice()`**. It exists on `Array`. Calling it
+  on the RNG throws at runtime and, because the enclosing function returns void,
+  the pass silently produces nothing. Use `city_builder._pick(rng, arr)`.
+
+## Camera framing
+The `SpringArm3D` extends along the rig's **+Z** with the camera looking back down
+it, so a **positive** X rotation raises the camera and aims it downward. A
+negative pitch puts the camera underground. Current defaults: `pitch = 0.17`,
+`pitch_min = -0.30`, `pitch_max = 0.62`, `follow_height = 1.46`,
+`ON_FOOT_LENGTH = 5.8`.
