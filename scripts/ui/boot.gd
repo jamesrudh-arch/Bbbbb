@@ -4,7 +4,8 @@ extends Control
 ## awaits: each stage owns its own timer and a single advance() transition.
 
 const NOTICE_FILE := "user://notice_seen.save"
-const STAGE_DURATION := [3.4, 2.8, 0.0, 0.0]
+const STUDIO_LOGO := preload("res://scripts/ui/studio_logo.gd")
+const STAGE_DURATION := [0.0, 2.8, 0.0, 0.0]  # 0 = driven by the 3D logo signal
 
 var _stage := 0
 var _timer := 0.0
@@ -13,6 +14,7 @@ var _fading := false
 var _stage_root: Control
 var _skip_hint: Label
 var _notice_panel: Control
+var _studio_logo: Node3D
 
 func _ready() -> void:
 	_stage_root = Control.new()
@@ -28,9 +30,10 @@ func _auto_capture() -> void:
 	for a in OS.get_cmdline_user_args():
 		if a.begins_with("--out="): out_dir = a.substr(6)
 	var names := ["open_01_studio", "open_02_title", "open_03_notice"]
+	var waits := [3.9, 0.9, 0.9]   # the studio mark needs its full 3.5 s reveal
 	for i in 3:
 		_show_stage(i)
-		await get_tree().create_timer(0.9).timeout
+		await get_tree().create_timer(waits[i]).timeout
 		await RenderingServer.frame_post_draw
 		var img := get_viewport().get_texture().get_image()
 		if img != null:
@@ -52,30 +55,28 @@ func _show_stage(stage: int) -> void:
 
 func _build_studio() -> void:
 	var bg := ColorRect.new()
-	bg.color = Color(0.02, 0.022, 0.028)
+	bg.color = Color(0.014, 0.016, 0.021)
 	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_stage_root.add_child(bg)
-	var center := VBoxContainer.new()
-	center.set_anchors_preset(Control.PRESET_CENTER)
-	center.position = Vector2(-300, -60)
-	center.custom_minimum_size = Vector2(600, 0)
-	center.add_theme_constant_override("separation", 10)
-	_stage_root.add_child(center)
-	var studio := Label.new()
-	studio.text = "D'YOUNGS GAMES"
-	studio.add_theme_font_size_override("font_size", 46)
-	studio.add_theme_color_override("font_color", Color(0.92, 0.80, 0.56))
-	studio.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	center.add_child(studio)
-	var sub := Label.new()
-	sub.text = "presents"
-	sub.add_theme_font_size_override("font_size", 16)
-	sub.add_theme_color_override("font_color", Color(0.55, 0.53, 0.50))
-	sub.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	center.add_child(sub)
-	var tw := create_tween()
-	center.modulate.a = 0.0
-	tw.tween_property(center, "modulate:a", 1.0, 1.0)
+
+	# Real 3D: the mark is extruded geometry with a metallic material.
+	var svc := SubViewportContainer.new()
+	svc.stretch = true
+	svc.set_anchors_preset(Control.PRESET_FULL_RECT)
+	svc.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_stage_root.add_child(svc)
+
+	var vp := SubViewport.new()
+	vp.own_world_3d = true
+	vp.transparent_bg = true
+	vp.size = Vector2i(1280, 720)
+	vp.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	svc.add_child(vp)
+
+	var logo: Node3D = STUDIO_LOGO.new()
+	vp.add_child(logo)
+	logo.finished.connect(func(): _advance())
+	_studio_logo = logo
 
 func _build_title() -> void:
 	var bg := ColorRect.new()
@@ -99,7 +100,7 @@ func _build_title() -> void:
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	center.add_child(title)
 	var tag := Label.new()
-	tag.text = "EVERYONE HAS LEVERAGE ON YOU."
+	tag.text = "EVERYBODY HAS SOMETHING ON YOU."
 	tag.add_theme_font_size_override("font_size", 16)
 	tag.add_theme_color_override("font_color", Color(0.62, 0.60, 0.56))
 	tag.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -205,8 +206,11 @@ func _advance() -> void:
 
 func _process(delta: float) -> void:
 	if _stage >= 2 or _fading: return
+	var dur := float(STAGE_DURATION[_stage])
+	if dur <= 0.0:
+		return          # stage owns its own timing (e.g. the 3D logo signal)
 	_accum += delta
-	if _accum >= float(STAGE_DURATION[_stage]):
+	if _accum >= dur:
 		_accum = 0.0
 		_show_stage(_stage + 1)
 
