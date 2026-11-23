@@ -122,12 +122,17 @@ func _physics_process(delta: float) -> void:
 	target_speed *= clampf(lerpf(1.0, style_speed, 0.35), 0.8, 1.15)
 	if Game.stamina <= 1.0: target_speed *= 0.62
 
+	# Crisp acceleration, responsible deceleration. The old version scaled BOTH
+	# accel and friction by 6.0 which produced overshoot and skating.
+	var ground := is_on_floor()
+	var accel_rate: float = (ACCEL if ground else ACCEL * 0.55)
 	var desired := move_dir * target_speed
-	velocity.x = move_toward(velocity.x, desired.x, ACCEL * delta * 6.0)
-	velocity.z = move_toward(velocity.z, desired.z, ACCEL * delta * 6.0)
-	if move_dir.length() < 0.05:
-		velocity.x = move_toward(velocity.x, 0, FRICTION * delta * 6.0)
-		velocity.z = move_toward(velocity.z, 0, FRICTION * delta * 6.0)
+	if move_dir.length() > 0.05:
+		velocity.x = move_toward(velocity.x, desired.x, accel_rate * delta)
+		velocity.z = move_toward(velocity.z, desired.z, accel_rate * delta)
+	else:
+		velocity.x = move_toward(velocity.x, 0.0, FRICTION * delta)
+		velocity.z = move_toward(velocity.z, 0.0, FRICTION * delta)
 
 	if is_on_floor() and Input.is_action_just_pressed("jump") and not is_crouching:
 		velocity.y = JUMP_VELOCITY

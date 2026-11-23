@@ -21,6 +21,11 @@ var root: Control
 # ---------- status widgets ----------
 var district_label: Label
 var clock_label: Label
+## Vertical inset below the very top of the screen. XOGOT renders its own overlay
+## bar across the top; the iPhone status bar/notch occupies the same band. Everything
+## in the HUD must start below this or it is unreadable and untappable.
+const TOP_INSET := 74.0
+
 var money_label: Label
 var mission_title: Label
 var mission_obj: Label
@@ -181,7 +186,7 @@ func _btn(text: String, size: int = 15) -> Button:
 # ---------------------------------------------------------------- status
 func _build_status() -> void:
 	var top_left := VBoxContainer.new()
-	top_left.position = Vector2(20, 18)
+	top_left.position = Vector2(20, TOP_INSET)
 	top_left.add_theme_constant_override("separation", 8)
 	root.add_child(top_left)
 
@@ -221,7 +226,7 @@ func _build_status() -> void:
 	# top right: money + heat + weapon
 	var top_right := VBoxContainer.new()
 	top_right.set_anchors_preset(Control.PRESET_TOP_RIGHT)
-	top_right.position = Vector2(-286, 18)
+	top_right.position = Vector2(-286, TOP_INSET)
 	top_right.custom_minimum_size = Vector2(256, 0)
 	top_right.add_theme_constant_override("separation", 8)
 	root.add_child(top_right)
@@ -269,7 +274,7 @@ func _build_status() -> void:
 func _build_mission() -> void:
 	mission_box = _panel()
 	mission_box.set_anchors_preset(Control.PRESET_CENTER_TOP)
-	mission_box.position = Vector2(-190, 16)
+	mission_box.position = Vector2(-190, TOP_INSET)
 	mission_box.custom_minimum_size = Vector2(380, 0)
 	root.add_child(mission_box)
 	var mv := VBoxContainer.new()
@@ -285,7 +290,7 @@ func _build_mission() -> void:
 func _build_compass() -> void:
 	compass = Control.new()
 	compass.set_anchors_preset(Control.PRESET_CENTER_TOP)
-	compass.position = Vector2(-170, 96)
+	compass.position = Vector2(-170, TOP_INSET + 82.0)
 	compass.custom_minimum_size = Vector2(340, 26)
 	compass.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	root.add_child(compass)
@@ -429,9 +434,30 @@ func _action_button(label_text: String, tint: Color, pos: Vector2) -> Button:
 	b.add_theme_stylebox_override("pressed", h)
 	b.add_theme_stylebox_override("focus", h)
 	# Touch press/release maps onto the same InputMap actions the keyboard uses.
-	b.button_down.connect(func(): Input.action_press(_action_for(label_text), 1.0))
-	b.button_up.connect(func(): Input.action_release(_action_for(label_text)))
+	# IMPORTANT: Input.action_press() does NOT emit is_action_just_pressed edges in
+	# Godot 4, so combat.gd (which only listens for just_pressed) never saw touch
+	# input. parse_input_event() drives the real pipeline and does produce the edge.
+	b.button_down.connect(func(): _fire_action(_action_for(label_text)))
 	return b
+
+## Dispatch a one-frame action press through the real input pipeline.
+func _fire_action(action: String) -> void:
+	if action.is_empty(): return
+	var ev := InputEventAction.new()
+	ev.action = action
+	ev.pressed = true
+	Input.parse_input_event(ev)
+	# Hold for a fixed short window before releasing. A deferred release could flush
+	# in the same frame as the press, meaning is_action_just_pressed() was never
+	# observed and the attack silently did nothing.
+	_release_after(action, 0.06)
+
+func _release_after(action: String, secs: float) -> void:
+	await get_tree().create_timer(secs).timeout
+	var up := InputEventAction.new()
+	up.action = action
+	up.pressed = false
+	Input.parse_input_event(up)
 
 func _action_for(face: String) -> String:
 	# B doubles as interact outside combat (see interaction.gd) — but the raw
@@ -455,28 +481,31 @@ func _build_right_actions() -> void:
 	col.add_theme_constant_override("separation", 10)
 	root.add_child(col)
 
-	btn_pause = _round_btn("II", Color(0.16, 0.17, 0.20), func(): toggle_menu())
+	btn_pause = _round_btn("||", Color(0.16, 0.17, 0.20), func(): toggle_menu())
 	col.add_child(btn_pause)
-	btn_map = _round_btn("▴", Color(0.16, 0.17, 0.20), func(): toggle_map())
+	btn_map = _round_btn("MAP", Color(0.16, 0.17, 0.20), func(): toggle_map())
 	col.add_child(btn_map)
-	btn_phone = _round_btn("◉", Color(0.16, 0.17, 0.20), func(): toggle_phone())
+	btn_phone = _round_btn("TEL", Color(0.16, 0.17, 0.20), func(): toggle_phone())
 	col.add_child(btn_phone)
-	btn_cam = _round_btn("◎", Color(0.16, 0.17, 0.20), func(): _cycle_camera())
+	btn_cam = _round_btn("CAM", Color(0.16, 0.17, 0.20), func(): _cycle_camera())
 	col.add_child(btn_cam)
 
 func _round_btn(text: String, tint: Color, cb: Callable) -> Button:
 	var b := Button.new()
 	b.text = text
-	b.custom_minimum_size = Vector2(54, 54)
-	b.size = Vector2(54, 54)
-	b.add_theme_font_size_override("font_size", 20)
+	# Pill geometry: wide enough for a 3-letter label, still thumb-sized (>=54pt).
+	var w: float = 74.0 if text.length() > 1 else 54.0
+	b.custom_minimum_size = Vector2(w, 54)
+	b.size = Vector2(w, 54)
+	b.add_theme_font_size_override("font_size", 15 if text.length() > 1 else 22)
 	b.add_theme_color_override("font_color", Color(0.9, 0.88, 0.84))
 	var n := StyleBoxFlat.new()
 	n.bg_color = Color(tint.r, tint.g, tint.b, 0.70)
-	n.corner_radius_top_left = 27
-	n.corner_radius_top_right = 27
-	n.corner_radius_bottom_left = 27
-	n.corner_radius_bottom_right = 27
+	var r: float = 27.0
+	n.corner_radius_top_left = r
+	n.corner_radius_top_right = r
+	n.corner_radius_bottom_left = r
+	n.corner_radius_bottom_right = r
 	n.border_width_left = 1
 	n.border_width_top = 1
 	n.border_width_right = 1

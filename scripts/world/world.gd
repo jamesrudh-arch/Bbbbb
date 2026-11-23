@@ -110,21 +110,36 @@ func _apply_time() -> void:
 	var elevation = sin(arc_t * PI) * 1.15
 	var azimuth = lerpf(-2.3, 2.3, arc_t)
 	sun.rotation = Vector3(-elevation, azimuth, 0.0)
-	var daylight = clampf(elevation * 1.45 + 0.05, 0.0, 1.0)
-	sun.light_energy = daylight * 2.6
+	var daylight = clampf(elevation * 1.15 + 0.34, 0.0, 1.0)
+	# Sun was at 2.6 which blew out every wall to near-white. Sun is the KEY light;
+	# ambient does the fill. Keep sun punchy, cut the ambient (below) so the scene
+	# has real shadow side instead of a uniformly lit grey box city.
+	sun.light_energy = daylight * 2.35
 	sun.visible = daylight > 0.015
 	var warmth = clampf(arc_t * 1.6, 0, 1)
-	sun.light_color = Color(1.0, 0.78, 0.58).lerp(Color(1.0, 0.97, 0.94), warmth)
+	# Warmer golden hour, less clinical white at noon.
+	sun.light_color = Color(1.0, 0.72, 0.46).lerp(Color(1.0, 0.94, 0.86), warmth)
 	moon.visible = daylight < 0.55
 	moon.light_energy = (1.0 - daylight) * 1.25
 	moon.rotation = Vector3(-0.9, azimuth + PI, 0.0)
 	var env: Environment = environment.environment
-	env.ambient_light_energy = lerpf(1.45, 1.6, daylight)
-	env.fog_light_color = Color(0.06, 0.075, 0.11).lerp(Color(0.55, 0.62, 0.72), daylight)
-	env.fog_density = lerpf(0.011, 0.0022, daylight)
-	env.background_color = Color(0.03, 0.04, 0.075).lerp(Color(0.58, 0.68, 0.84), daylight)
-	env.background_energy_multiplier = lerpf(0.9, 1.15, daylight)
-	env.glow_intensity = lerpf(0.85, 0.35, daylight)
+	# Ambient is FILL, not key. It was 1.45-1.6 which flattened every shadow.
+	env.ambient_light_energy = lerpf(0.55, 1.05, daylight)
+	env.fog_light_color = Color(0.05, 0.065, 0.10).lerp(Color(0.46, 0.52, 0.62), daylight)
+	env.fog_density = lerpf(0.013, 0.0034, daylight)
+	# Push contrast + warmth via tone curve rather than albedo.
+	env.adjustment_enabled = true
+	env.adjustment_contrast = 1.10
+	env.adjustment_saturation = 1.14
+	env.adjustment_brightness = 1.06
+	env.glow_intensity = lerpf(0.95, 0.45, daylight)
+	# Sky tint follows the time of day.
+	if env.sky != null and env.sky.sky_material is ProceduralSkyMaterial:
+		var sm := env.sky.sky_material as ProceduralSkyMaterial
+		sm.sky_top_color = Color(0.02, 0.03, 0.07).lerp(Color(0.20, 0.38, 0.68), daylight)
+		sm.sky_horizon_color = Color(0.12, 0.11, 0.16).lerp(Color(0.80, 0.66, 0.52), daylight)
+		sm.ground_horizon_color = Color(0.10, 0.09, 0.12).lerp(Color(0.66, 0.58, 0.48), daylight)
+		sm.sun_angle_max = 14.0
 	if hud: hud.set_clock(h, Game.weather, int(lerpf(12, 31, daylight)))
 
 func _apply_weather() -> void:

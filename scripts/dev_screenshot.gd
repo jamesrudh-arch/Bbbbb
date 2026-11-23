@@ -30,7 +30,12 @@ func _ready() -> void:
 		_capture_later()
 
 func _capture_later() -> void:
-	await get_tree().create_timer(_wait).timeout
+	# Wait on FRAMES, not wall-clock. Under llvmpipe the render thread saturates and
+	# a create_timer() can be starved for minutes, which made the capture appear to
+	# hang. Counting rendered frames guarantees the scene is actually composed.
+	var frames := maxi(30, int(_wait * 8.0))
+	for i in frames:
+		await get_tree().process_frame
 	# Two frames so the viewport texture is complete in the current frame.
 	await get_tree().process_frame
 	await get_tree().process_frame

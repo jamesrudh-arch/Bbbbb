@@ -3,17 +3,23 @@ extends Node3D
 ## SpringArm collision keeps the view out of walls; yaw/pitch are smoothed;
 ## touch drag rotates, movement input auto-recentres when you run forward.
 
+const ON_FOOT_LENGTH := 5.8
+const VEHICLE_LENGTH := 8.2
+
 @export var yaw_speed := 4.4
 @export var pitch_speed := 2.6
-@export var pitch_min := -0.62
-@export var pitch_max := 0.32
-@export var follow_height := 1.75
+@export var pitch_min := -0.42
+@export var pitch_max := 0.36
+## Default view tilt. Negative X rotation raises the camera above the shoulder and
+## aims it down at the player, which puts the horizon above centre and the player in
+## the lower third — standard third-person action framing.
+@export var pitch := -0.13
+@export var follow_height := 1.58
 @export var follow_smoothing := 9.0
 @export var auto_recentre := 0.35
 
 var target_node: Node3D = null
 var yaw := PI * 0.5
-var pitch := -0.10
 var spring: SpringArm3D
 var camera: Camera3D
 var _follow_target_position := Vector3.ZERO
@@ -26,9 +32,12 @@ var _vehicle = null
 func _ready() -> void:
 	spring = $SpringArm3D
 	camera = $SpringArm3D/Camera3D
-	spring.spring_length = 6.2
+	spring.spring_length = ON_FOOT_LENGTH
 	spring.collision_mask = 1 | 8
-	spring.margin = 0.35
+	# Larger margin + a floor on how close the arm may pull in. With 0.35 the
+	# camera clipped inside building corners (visibly "stuck in a wall").
+	spring.margin = 0.55
+	spring.spring_length = ON_FOOT_LENGTH
 	var rid := _player_rid()
 	if rid.is_valid():
 		spring.add_excluded_object(rid)
@@ -98,11 +107,11 @@ func _process(delta: float) -> void:
 
 func attach_vehicle(v) -> void:
 	_vehicle = v
-	spring.spring_length = 8.2
+	spring.spring_length = VEHICLE_LENGTH
 
 func detach_vehicle() -> void:
 	_vehicle = null
-	spring.spring_length = 5.4
+	spring.spring_length = ON_FOOT_LENGTH
 	_initialised = false
 
 func _follow_vehicle(delta: float) -> void:
