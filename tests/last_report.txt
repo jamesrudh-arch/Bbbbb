@@ -1,5 +1,5 @@
 LEVERAGE TEST REPORT
-2026-11-23T15:44:53
+2026-11-23T16:06:29
 
 PASS  content.districts==7  7
 PASS  districts have palettes+landmarks
@@ -100,7 +100,7 @@ PASS  subtitle scale default
 PASS  camera sensitivity default
 PASS  Crash autoload present
 PASS  rescue script loads
-PASS  crash log written  7530 bytes
+PASS  crash log written  8534 bytes
 PASS  archetype roster at least 24  25 defined
 PASS  bosses exist alongside the regular roster  3 bosses
 PASS  roster covers street, ring and corporate
@@ -163,8 +163,17 @@ PASS  every district has sub-locations
 PASS  same seed reproduces the board
 PASS  district tiers span 1..6  range 1..6
 PASS  district tiers are not all easy  max 6
+PASS  threat ascends with district  ash 1 vs vesper 6
+PASS  highest district reaches threat 6  got 6
+PASS  notoriety raises threat in a starting district  rookie 1, veteran 2
+PASS  threat never below 1  1
+PASS  adaptive is bounded  0.45 / -0.90
+PASS  adaptive responds to losing  loss -0.90 < win 0.45
+PASS  difficulty does NOT inflate health  1.15x
+PASS  squad size scales with threat  4 vs 3
+PASS  squads stay small  4
 PASS  world instantiated
-PASS  world build under 60s  1308 ms
+PASS  world build under 60s  1419 ms
 PASS  seven districts built  7
 PASS  districts populated  8993 objects
 PASS  sidewalk nav graph per district
@@ -193,4 +202,4 @@ PASS  side job starts with job_ prefix
 PASS  job completes into completed_jobs
 PASS  job unlocks a discipline reward  ["brawler", "kickboxing"]
 
-PASSED: 191   FAILED: 0   TOTAL: 191
+PASSED: 200   FAILED: 0   TOTAL: 200

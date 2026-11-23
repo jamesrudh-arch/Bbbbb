@@ -23,7 +23,7 @@ func _ready() -> void:
 
 func _run() -> void:
 	print("\n=========== LEVERAGE TEST SUITE ===========")
-	for step in ["content", "input", "save_load", "economy", "combat", "audio", "scenes", "migration", "a11y", "archetypes", "ai", "style", "impact", "conversation", "content_engine"]:
+	for step in ["content", "input", "save_load", "economy", "combat", "audio", "scenes", "migration", "a11y", "archetypes", "ai", "style", "impact", "conversation", "content_engine", "difficulty"]:
 		print("  [step] ", step)
 		match step:
 			"content": _test_content()
@@ -41,6 +41,7 @@ func _run() -> void:
 			"impact": _test_impact()
 			"conversation": _test_conversation()
 			"content_engine": _test_content_engine()
+			"difficulty": _test_difficulty()
 	print("  [step] world")
 	await _test_world()
 	print("  [step] missions")
@@ -633,6 +634,83 @@ func _test_content_engine() -> void:
 	_ok("district tiers are not all easy", tiers[-1] >= 5, "max %d" % tiers[-1])
 
 	e.queue_free()
+
+## The five axes must ascend, stay bounded, and — the rule that governs the whole
+## design — must never make enemies tankier.
+func _test_difficulty() -> void:
+	var d = load("res://scripts/systems/difficulty.gd").new()
+	add_child(d)
+
+	Game.current_district = "ash_row"
+	Game.stats["fights_won"] = 0
+	Game.stats["story_chapter"] = 1
+	for f in Game.trust:
+		Game.trust[f] = 50.0
+	Game.wanted = 0
+	d.reset()
+	var ash: int = d.threat_level()
+
+	Game.current_district = "vesper_heights"
+	d.reset()
+	var vesper: int = d.threat_level()
+	_ok("threat ascends with district", vesper > ash, "ash %d vs vesper %d" % [ash, vesper])
+	_ok("highest district reaches threat 6", vesper == 6, "got %d" % vesper)
+
+	# Notoriety must raise threat inside a low district. This was genuinely broken:
+	# the formula took max(district, lift), so a tier-1 district clamped it to 1.
+	Game.current_district = "ash_row"
+	Game.stats["fights_won"] = 0
+	Game.completed_missions = []
+	d.reset()
+	var rookie: int = d.threat_level()
+	Game.stats["fights_won"] = 60
+	Game.completed_missions = ["a", "b", "c", "d", "e", "f", "g", "h"]
+	var veteran: int = d.threat_level()
+	_ok("notoriety raises threat in a starting district", veteran > rookie,
+		"rookie %d, veteran %d" % [rookie, veteran])
+	Game.stats["fights_won"] = 0
+	Game.completed_missions = []
+
+	d.reset()
+	for i in 30:
+		d.note_death()
+	_ok("threat never below 1", d.threat_level() >= 1, "%d" % d.threat_level())
+
+	d.reset()
+	for i in 40:
+		d.note_fight_won()
+	var hi: float = d.axis_adaptive()
+	d.reset()
+	for i in 40:
+		d.note_death()
+	var lo: float = d.axis_adaptive()
+	_ok("adaptive is bounded", absf(hi) <= 1.0 and absf(lo) <= 1.0,
+		"%.2f / %.2f" % [hi, lo])
+	_ok("adaptive responds to losing", lo < hi, "loss %.2f < win %.2f" % [lo, hi])
+
+	# THE DESIGN RULE: difficulty must not scale health.
+	var thug1: Dictionary = Archetypes.make("street_thug", 1)
+	var thug6: Dictionary = Archetypes.make("street_thug", 6)
+	var ratio: float = float(thug6["health"]) / float(thug1["health"])
+	_ok("difficulty does NOT inflate health", ratio < 1.30, "%.2fx" % ratio)
+
+	Game.current_district = "vesper_heights"
+	d.reset()
+	var big: int = d.squad_size(3)
+	Game.current_district = "ash_row"
+	d.reset()
+	var small: int = d.squad_size(3)
+	_ok("squad size scales with threat", big >= small, "%d vs %d" % [big, small])
+	_ok("squads stay small", big <= 6, "%d" % big)
+
+	# Leave global state clean for the world test that follows.
+	Game.current_district = "ash_row"
+	Game.wanted = 0
+	Game.heat = 0.0
+	for f in Game.trust:
+		Game.trust[f] = 50.0
+	d.reset()
+	d.queue_free()
 
 func _report() -> void:
 	print("\n------------------- RESULTS -------------------")

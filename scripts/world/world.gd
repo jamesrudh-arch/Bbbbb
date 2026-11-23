@@ -63,6 +63,7 @@ func _ready() -> void:
 	_wire_dialogue()
 	_wire_conversation()
 	_wire_content_engine()
+	_wire_difficulty()
 	world_streamer.setup(self, districts)
 	traffic.setup(self, districts)
 	npcs.setup(self, districts)
@@ -147,6 +148,21 @@ func say(lines: Array) -> void:
 func ask(question: Dictionary, choices: Array) -> void:
 	if dialogue != null:
 		dialogue.ask(question, choices)
+
+## The five difficulty axes and the thing that spawns content into the world.
+var difficulty: Node = null
+var spawn_director: Node = null
+
+func _wire_difficulty() -> void:
+	difficulty = load("res://scripts/systems/difficulty.gd").new()
+	difficulty.name = "Difficulty"
+	add_child(difficulty)
+	difficulty.setup(self)
+
+	spawn_director = load("res://scripts/systems/spawn_director.gd").new()
+	spawn_director.name = "SpawnDirector"
+	add_child(spawn_director)
+	spawn_director.setup(self, difficulty)
 
 ## Contracts, bounties and street events.
 var content_engine: Node = null

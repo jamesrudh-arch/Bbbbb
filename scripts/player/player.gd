@@ -192,6 +192,11 @@ func is_in_combat() -> bool:
 	return combat != null and combat.in_combat
 
 func _on_died() -> void:
+	# Repeated deaths are the strongest signal the city is too hard right now.
+	# The adaptive axis lowers threat rather than the player's health bar.
+	var w = get_tree().current_scene
+	if w != null and w.get("difficulty") != null:
+		w.difficulty.note_death()
 	is_dead = true
 	if rig != null: rig.play("death")
 	await get_tree().create_timer(3.0).timeout

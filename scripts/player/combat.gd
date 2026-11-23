@@ -73,6 +73,8 @@ func _scan_targets() -> void:
 		fight_ended.emit(true)
 		# Bank the rank on a clean win so a good fight is remembered.
 		StyleRank.end_fight(true)
+		if world_ref() != null and world_ref().difficulty != null:
+			world_ref().difficulty.note_fight_won()
 		Audio.set_music_state("chase" if Game.wanted > 0 else "explore")
 	if in_combat:
 		# Keep the nearest target; retarget if it dies.
@@ -144,6 +146,11 @@ func _attack(kind: String) -> void:
 		# whiff: small stamina/heat penalty keeps spam honest
 		Game.stamina = maxf(0.0, Game.stamina - 2.0)
 
+## The world this combat belongs to, or null if detached.
+func world_ref() -> Node:
+	var n: Node = get_tree().current_scene
+	return n if n != null and n.get("difficulty") != null else null
+
 func _apply_hit(t: Node3D, damage: float, kind: String) -> void:
 	var armour := float(t.get("armor") if t.get("armor") != null else 0.0)
 	damage *= (1.0 - clampf(armour, 0.0, 0.85))
@@ -168,6 +175,8 @@ func _apply_hit(t: Node3D, damage: float, kind: String) -> void:
 		player.camera_rig.shake(Impact.shake_curve(clampf(damage * 0.06, 0.18, 0.85)))
 	Impact.hit_stop(strength)
 	StyleRank.on_hit(kind, damage, _counter_window > 0.0)
+	if world_ref() != null and world_ref().difficulty != null:
+		world_ref().difficulty.note_player_hit_landed()
 	# Bystanders react. Without this the city is furnishing.
 	var world = get_tree().current_scene
 	if world != null and world.get("conversations") != null and randf() < 0.5:
@@ -257,5 +266,7 @@ func notify_attacked(attacker: Node3D, amount: float = 6.5) -> void:
 		Game.add_heat(2.0)
 	if StyleRank != null:
 		StyleRank.on_player_hit()
+	if world_ref() != null and world_ref().difficulty != null:
+		world_ref().difficulty.note_player_hit()
 	Game.damage(dmg, "combat")
 	if player.camera_rig: player.camera_rig.shake(0.45)
