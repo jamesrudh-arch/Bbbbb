@@ -66,10 +66,13 @@ func _scan_targets() -> void:
 	if in_combat and not was:
 		target = best
 		fight_started.emit(best)
+		StyleRank.begin_fight()
 		Audio.set_music_state("tension")
 	elif not in_combat and was:
 		target = null
 		fight_ended.emit(true)
+		# Bank the rank on a clean win so a good fight is remembered.
+		StyleRank.end_fight(true)
 		Audio.set_music_state("chase" if Game.wanted > 0 else "explore")
 	if in_combat:
 		# Keep the nearest target; retarget if it dies.
@@ -110,9 +113,16 @@ func _attack(kind: String) -> void:
 	_combo_window = 0.9
 
 	if player.rig != null:
-		var clip: String = "punch"
-		if kind == "kick": clip = "slash" if Game.active_discipline == "weapon" else "punch"
-		if kind == "heavy": clip = "slash" if Game.active_discipline == "weapon" else "punch"
+		# Clips chosen from the animation audit (docs/25). "punch" measures only
+		# 23 degrees of arm travel -- it is a windup, not a strike. These are the
+		# clips that actually look like hitting someone.
+		var clip := "punch_cross"
+		if kind == "kick":
+			clip = "kick_mma"
+		elif kind == "heavy":
+			clip = "punch_hook" if Game.active_discipline != "weapon" else "kick_round"
+		if _combo >= 4:
+			clip = "punch_quad" if Game.active_discipline != "weapon" else "kick_round"
 		player.rig.play(clip, float(stats["speed"]) * (1.0 + _combo * 0.03))
 	Audio.play_at("punch_swing", player.global_position + Vector3(0, 1.2, 0), randf_range(0.95, 1.06), -8.0)
 
@@ -151,15 +161,19 @@ func _apply_hit(t: Node3D, damage: float, kind: String) -> void:
 	if kind == "kick": sfx = "kick_hit"
 	elif kind == "heavy": sfx = "heavy_hit"
 	Audio.play_at(sfx, t.global_position, randf_range(0.92, 1.08))
-	if player.camera_rig: player.camera_rig.shake(clampf(damage * 0.05, 0.15, 0.8))
-	# Hitstop: freeze animation briefly for weight.
-	Engine.time_scale = 0.55
-	await get_tree().create_timer(0.045, true, false, true).timeout
-	Engine.time_scale = 1.0
+	# Weight. Strength is normalised damage so light/medium/heavy map to the
+	# three hit-stop lengths in impact.gd.
+	var strength := clampf(damage / 32.0, 0.15, 1.0)
+	if player.camera_rig:
+		player.camera_rig.shake(Impact.shake_curve(clampf(damage * 0.06, 0.18, 0.85)))
+	Impact.hit_stop(strength)
+	StyleRank.on_hit(kind, damage, _counter_window > 0.0)
 	Game.add_heat(damage * 0.12)
 	Events.record("combat_hit", {"kind": kind, "damage": damage})
 
 func _dodge() -> void:
+	if StyleRank != null:
+		StyleRank.on_dodge()
 	var stats: Dictionary = Game.discipline_stats()
 	var cost := 14.0 if Game.active_discipline != "drunken" else 6.0
 	if Game.stamina < cost * 0.6: return
@@ -237,5 +251,7 @@ func notify_attacked(attacker: Node3D, amount: float = 6.5) -> void:
 		Audio.play_at("punch_hit", player.global_position, 1.0, -6.0)
 		if player.rig: player.rig.play("hit", 1.0)
 		Game.add_heat(2.0)
+	if StyleRank != null:
+		StyleRank.on_player_hit()
 	Game.damage(dmg, "combat")
 	if player.camera_rig: player.camera_rig.shake(0.45)

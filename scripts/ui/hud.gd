@@ -105,6 +105,7 @@ func _build() -> void:
 	_build_prompts()
 	_build_compass()
 	_build_minimap()
+	_build_style_meter()
 	_build_vehicle_panel()
 	_build_menu()
 	_build_shop()
@@ -332,6 +333,19 @@ func _on_settings_changed() -> void:
 	_place_combat_cluster()
 	if minimap != null and minimap.has_method("apply_accessibility"):
 		minimap.apply_accessibility()
+
+## Style rank sits under the health readout on the left: the player already
+## looks there mid-fight, so a new corner would never be read.
+func _build_style_meter() -> void:
+	style_meter = load("res://scripts/ui/style_meter.gd").new()
+	style_meter.name = "StyleMeter"
+	# Clear of the minimap: it is anchored at TOP_INSET + 8 with width/height 156,
+	# so the meter starts below that or it draws on top of the map.
+	style_meter.position = Vector2(22, TOP_INSET + 8.0 + 168.0)
+	root.add_child(style_meter)
+	style_meter.setup(StyleRank)
+
+var style_meter: Control = null
 
 func _build_minimap() -> void:
 	minimap = MINIMAP.new()
@@ -821,6 +835,12 @@ func toggle_menu() -> void:
 	if _menu == null: return
 	_menu.visible = not _menu.visible
 	get_tree().paused = _menu.visible
+	# A hit-stop running when the game pauses would restore time_scale under the
+	# pause and leave the game ticking while the menu is up.
+	if _menu.visible:
+		Impact.suspend()
+	else:
+		Impact.resume()
 
 func _build_shop() -> void:
 	_shop = _fullscreen_overlay()

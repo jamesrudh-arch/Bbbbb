@@ -23,7 +23,7 @@ func _ready() -> void:
 
 func _run() -> void:
 	print("\n=========== LEVERAGE TEST SUITE ===========")
-	for step in ["content", "input", "save_load", "economy", "combat", "audio", "scenes", "migration", "a11y", "archetypes", "ai"]:
+	for step in ["content", "input", "save_load", "economy", "combat", "audio", "scenes", "migration", "a11y", "archetypes", "ai", "style", "impact"]:
 		print("  [step] ", step)
 		match step:
 			"content": _test_content()
@@ -37,6 +37,8 @@ func _run() -> void:
 			"a11y": _test_platform()
 			"archetypes": _test_archetypes()
 			"ai": _test_enemy_ai()
+			"style": _test_style_rank()
+			"impact": _test_impact()
 	print("  [step] world")
 	await _test_world()
 	print("  [step] missions")
@@ -412,6 +414,70 @@ func _test_enemy_ai() -> void:
 	var res: Dictionary = ai.on_hit(10.0, Vector3.FORWARD)
 	_ok("on_hit reports a result", res.has("blocked") and res.has("damage"))
 	ai.queue_free()
+
+## The style metre must reward variety and punish mashing. If spamming one
+## attack can reach SS, the whole system is decoration.
+func _test_style_rank() -> void:
+	_ok("six ranks", StyleRank.RANKS.size() == 6, str(StyleRank.RANKS))
+	_ok("thresholds ascend", StyleRank.THRESHOLDS[1] < StyleRank.THRESHOLDS[5])
+	_ok("decay ascends with rank", StyleRank.DECAY[1] < StyleRank.DECAY[5])
+
+	# Ash: mash the same attack 40 times.
+	StyleRank.score = 0.0
+	StyleRank.rank_index = 0
+	StyleRank.begin_fight()
+	for i in 40:
+		StyleRank.on_hit("punch_cross", 9.0)
+	var mash_rank: int = StyleRank.rank_index
+	var mash_score: float = StyleRank.score
+
+	# Clean: use the whole kit.
+	StyleRank.score = 0.0
+	StyleRank.rank_index = 0
+	StyleRank.begin_fight()
+	var kit := ["punch_cross", "punch_hook", "kick_mma", "kick_round", "punch_quad"]
+	for i in 40:
+		StyleRank.on_hit(kit[i % kit.size()], 9.0)
+	var varied_rank: int = StyleRank.rank_index
+
+	_ok("mashing does NOT reach SS", mash_rank < 5, "mashed to %s" % StyleRank.RANKS[mash_rank])
+	_ok("variety out-scores mashing", varied_rank > mash_rank,
+		"varied %s vs mashed %s" % [StyleRank.RANKS[varied_rank], StyleRank.RANKS[mash_rank]])
+
+	# Getting hit hard above A costs the grade.
+	StyleRank.score = StyleRank.THRESHOLDS[4]
+	StyleRank.rank_index = 4
+	StyleRank.on_player_hit()
+	_ok("taking a hit above A drops the rank", StyleRank.rank_index == 0,
+		"now %s" % StyleRank.rank_name())
+
+	# Decay: standing still bleeds score.
+	StyleRank.score = 400.0
+	StyleRank.rank_index = 3
+	StyleRank.begin_fight()
+	StyleRank._idle_grace = 0.0
+	for i in 60:
+		StyleRank._process(1.0 / 60.0)
+	_ok("score decays when idle", StyleRank.score < 400.0, "%.0f" % StyleRank.score)
+	StyleRank.end_fight(false)
+	StyleRank.score = 0.0
+	StyleRank.rank_index = 0
+
+## Hit-stop must never leave the game running at the wrong speed.
+func _test_impact() -> void:
+	_ok("Impact autoload present", Impact != null)
+	Impact.resume()
+	var before := Engine.time_scale
+	Impact.hit_stop(1.0)
+	_ok("hit-stop slows time", Engine.time_scale < before, "%.3f" % Engine.time_scale)
+	# Overlapping impacts must not stack into a permanent freeze.
+	Impact.hit_stop(0.2)
+	_ok("overlapping hit-stop does not compound", Engine.time_scale > 0.0)
+	Impact.suspend()
+	_ok("suspend restores time", is_equal_approx(Engine.time_scale, 1.0))
+	Impact.resume()
+	_ok("resume restores time", is_equal_approx(Engine.time_scale, 1.0))
+	_ok("shake curve is monotonic", Impact.shake_curve(0.9) > Impact.shake_curve(0.4))
 
 func _report() -> void:
 	print("\n------------------- RESULTS -------------------")
