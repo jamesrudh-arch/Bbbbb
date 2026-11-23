@@ -21,6 +21,27 @@ var drive_graph: Dictionary = {}   # district -> Array[Vector3] (road centre gra
 var model_cache: Dictionary = {}
 
 # ---------------------------------------------------------------- public API
+## Deterministic landmark placement, mirrored by world_map._landmarks().
+func landmark_position(id: String) -> Vector3:
+	var info: Dictionary = Content.INTERIORS.get(id, {})
+	var district: String = str(info.get("district", ""))
+	if district == "":
+		for did in Content.DISTRICTS:
+			if id in Content.DISTRICTS[did].get("landmarks", []):
+				district = did
+				break
+	if district == "" or not Content.DISTRICTS.has(district):
+		return Vector3.INF
+	var lm: Array = Content.DISTRICTS[district].get("landmarks", [])
+	var i := lm.find(id)
+	if i < 0:
+		i = 0
+	var n: int = maxi(1, lm.size())
+	var c := district_center(district)
+	var a := TAU * float(i) / float(n) + 0.4
+	var r := 46.0
+	return c + Vector3(cos(a) * r, 0.0, sin(a) * r)
+
 func district_center(id: String) -> Vector3:
 	return Content.district_center(id)
 

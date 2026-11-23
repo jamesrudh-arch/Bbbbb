@@ -93,12 +93,17 @@ func _set_destination(target: String) -> void:
 
 # --------------------------------------------------------------- projection
 func _map_rect() -> Rect2:
+	# A Control built before its parent lays out reports size 0, which would make
+	# this rect negative (Godot rejects that). Fall back to the viewport.
 	var sz := size
+	if sz.x < 64.0 or sz.y < 64.0:
+		sz = get_viewport_rect().size
 	var span := MAP_EXTENT * 2.0 * _zoom
-	var sc := minf((sz.x - PAD * 2.0) / span, (sz.y - PAD * 2.0) / span)
-	var w := span * sc
-	var h := span * sc
-	return Rect2(Vector2((sz.x - w) * 0.5, (sz.y - h) * 0.5) + _pan, Vector2(w, h))
+	var sc: float = minf((sz.x - PAD * 2.0) / span, (sz.y - PAD * 2.0) / span)
+	sc = maxf(sc, 0.001)
+	var w: float = maxf(span * sc, 1.0)
+	var h: float = maxf(span * sc, 1.0)
+	return Rect2(Vector2(maxf((sz.x - w) * 0.5, 0.0), maxf((sz.y - h) * 0.5, 0.0)) + _pan, Vector2(w, h))
 
 ## world -> rect-normalised [0,1]
 func _world_to_norm(p: Vector3) -> Vector2:
@@ -254,11 +259,11 @@ func _draw_blocks(sb: Control, r: Rect2) -> void:
 			var half := block * 0.34
 			var p0 := _world_to_screen(c - Vector3(half, 0, half))
 			var p1 := _world_to_screen(c + Vector3(half, 0, half))
-			if p1.x - p0.x < 2.0:
+			if p1.x - p0.x < 2.0 or p1.y - p0.y < 2.0:
 				continue
 			# Only draw blocks that actually fall inside the map bed; without this
 			# the grid bleeds across the whole screen behind the overlay.
-			var cell := Rect2(p0, p1 - p0).intersection(r)
+			var cell := Rect2(p0, Vector2(maxf(p1.x - p0.x, 0.01), maxf(p1.y - p0.y, 0.01))).intersection(r)
 			if cell.size.x < 1.5 or cell.size.y < 1.5:
 				continue
 			sb.draw_rect(cell, Color(0.115, 0.125, 0.145, 1.0))
@@ -345,7 +350,7 @@ func _draw_hud(sb: Control, r: Rect2) -> void:
 	sb.draw_string(_font, r.position + Vector2(6, 46), sub, HORIZONTAL_ALIGNMENT_LEFT, -1, 12,
 		Color(0.60, 0.64, 0.70))
 	# Destination + route readout
-	var box := Rect2(Vector2(r.position.x + 6, r.end.y - 74), Vector2(minf(430, r.size.x - 12), 66))
+	var box := Rect2(Vector2(r.position.x + 6, r.end.y - 74), Vector2(maxf(1.0, minf(430.0, r.size.x - 12.0)), 66))
 	sb.draw_rect(box, Color(0.04, 0.045, 0.055, 0.92))
 	sb.draw_rect(box, Color(0.22, 0.23, 0.27), false, 1.0)
 	if _selected == "":

@@ -67,7 +67,7 @@ func _wire_systems() -> void:
 		interaction.setup(self, world.interactables)
 
 func _build_rig() -> void:
-	var cid := "emeka"
+	var cid := "marcus"
 	var cmodel: String = Content.CHARACTERS[cid]["model"]
 	if rig == null: return
 	if rig.build(cmodel, 0.92):

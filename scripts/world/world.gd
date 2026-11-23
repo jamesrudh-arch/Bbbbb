@@ -58,6 +58,7 @@ func _ready() -> void:
 	hud.setup(self)
 	hud.set_district(Content.district_name(Game.current_district))
 	_wire_phone()
+	_wire_gps()
 	world_streamer.setup(self, districts)
 	traffic.setup(self, districts)
 	npcs.setup(self, districts)
@@ -104,6 +105,15 @@ func _update_district() -> void:
 		Game.notify(Content.district_name(best), "district")
 		hud.set_district(Content.district_name(best))
 		Events.record("district_enter", {"district": best})
+
+## On-road navigation ribbon.
+var gps_line: Node3D = null
+
+func _wire_gps() -> void:
+	gps_line = load("res://scripts/ui/gps_line.gd").new()
+	gps_line.name = "GPSLine"
+	add_child(gps_line)
+	gps_line.setup(self)
 
 ## Phone scheduling: calls and messages are gated on story state.
 var phone_system: Node = null

@@ -161,6 +161,13 @@ Explicitly cut, deliberately:
 
 ---
 
+## 9b. ADDITIONS PENDING DECISION — see docs/23_ADDITIONAL_RECOMMENDATIONS.md
+
+Cheap-now / expensive-later items not previously raised:
+localisation path, audio compression + loudness, iOS safe area and one-hand play,
+accessibility basics, save versioning + migration, crash reporting, a voice budget
+decision, an unstick/rescue option, and a licence statement.
+
 ## 10. READY TO BUILD
 
 Nothing further is needed from you except **the token**.

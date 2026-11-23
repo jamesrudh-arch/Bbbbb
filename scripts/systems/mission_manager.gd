@@ -117,6 +117,10 @@ func _check_choice(obj: Dictionary) -> void:
 		Game.advance_mission()
 	)
 
+## Public wrapper so the HUD/minimap can ask where an objective is.
+func target_position(target: String) -> Vector3:
+	return _target_position(target)
+
 func _target_position(target: String) -> Vector3:
 	# Landmarks resolve through the builder; NPCs through the population list.
 	for a in world.npcs.named:

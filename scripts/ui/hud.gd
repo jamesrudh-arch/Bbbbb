@@ -2,6 +2,7 @@ extends CanvasLayer
 
 const MAP_VIEW := preload("res://scripts/ui/world_map.gd")
 const PHONE_VIEW := preload("res://scripts/ui/phone.gd")
+const MINIMAP := preload("res://scripts/ui/minimap.gd")
 ## HUD — touch-first interface for iPhone/XOGOT.
 ## Layout is anchored in a 1280x720 safe design space (canvas_items stretch), so
 ## every control keeps its physical size and thumb reach across iPhone sizes.
@@ -101,6 +102,7 @@ func _build() -> void:
 	_build_combat_buttons()
 	_build_prompts()
 	_build_compass()
+	_build_minimap()
 	_build_vehicle_panel()
 	_build_menu()
 	_build_shop()
@@ -290,6 +292,15 @@ func _build_mission() -> void:
 	mv.add_child(mission_obj)
 
 # ---------------------------------------------------------------- compass
+func _build_minimap() -> void:
+	minimap = MINIMAP.new()
+	minimap.set_anchors_preset(Control.PRESET_TOP_LEFT)
+	minimap.position = Vector2(18, TOP_INSET + 8.0)
+	minimap.custom_minimum_size = Vector2(156, 156)
+	minimap.size = Vector2(156, 156)
+	root.add_child(minimap)
+	minimap.setup(world)
+
 func _build_compass() -> void:
 	compass = Control.new()
 	compass.set_anchors_preset(Control.PRESET_CENTER_TOP)
