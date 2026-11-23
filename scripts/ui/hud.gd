@@ -1,4 +1,6 @@
 extends CanvasLayer
+
+const MAP_VIEW := preload("res://scripts/ui/world_map.gd")
 ## HUD — touch-first interface for iPhone/XOGOT.
 ## Layout is anchored in a 1280x720 safe design space (canvas_items stretch), so
 ## every control keeps its physical size and thumb reach across iPhone sizes.
@@ -875,6 +877,9 @@ func _cycle_radio() -> void:
 	else:
 		show_dialogue(stations[i]["name"], stations[i]["desc"])
 
+## Opens the interactive world map. The previous implementation was a static grid
+## of district cards with no city, no player and no routing — this hands off to
+## scripts/ui/world_map.gd, which draws the real layout from CityBuilder.
 func toggle_map() -> void:
 	if world == null: return
 	if _mapview != null and _mapview.visible:
@@ -882,39 +887,24 @@ func toggle_map() -> void:
 		return
 	if _mapview == null:
 		_mapview = _fullscreen_overlay()
-		var p := _panel(Color(0.035, 0.04, 0.05, 0.98), 18)
-		p.set_anchors_preset(Control.PRESET_CENTER)
-		p.position = Vector2(-380, -250)
-		p.custom_minimum_size = Vector2(760, 500)
-		_mapview.add_child(p)
-		var v := VBoxContainer.new()
-		v.add_theme_constant_override("separation", 10)
-		p.add_child(v)
-		v.add_child(_label("CINDER CITY", 22, GOLD))
-		var grid := GridContainer.new()
-		grid.columns = 3
-		grid.add_theme_constant_override("h_separation", 8)
-		grid.add_theme_constant_override("v_separation", 8)
-		v.add_child(grid)
-		for id in Content.DISTRICT_ORDER:
-			var d: Dictionary = Content.DISTRICTS[id]
-			var cell := _panel(Color(0.08, 0.085, 0.10, 0.92), 10)
-			cell.custom_minimum_size = Vector2(238, 130)
-			var cv := VBoxContainer.new()
-			cell.add_child(cv)
-			var nm := _label(d["name"].to_upper(), 16, d["palette"]["accent"])
-			cv.add_child(nm)
-			var tg := _label(d["tagline"], 11, TEXT_DIM)
-			tg.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-			tg.custom_minimum_size = Vector2(214, 0)
-			cv.add_child(tg)
-			var fac: Dictionary = Content.FACTIONS.get(d["faction"], {"name": ""})
-			cv.add_child(_label(fac["name"] + " · tier " + str(d["tier"]), 10, GOLD_DIM))
-			grid.add_child(cell)
-		var close := _btn("CLOSE", 14)
-		close.pressed.connect(func(): _mapview.visible = false)
-		v.add_child(close)
+		var m := MAP_VIEW.new()
+		m.name = "WorldMap"
+		m.set_anchors_preset(Control.PRESET_FULL_RECT)
+		_mapview.add_child(m)
+		m.setup(self, world)
 	_mapview.visible = true
+
+## Returns the destination the player picked on the map, if any.
+func map_destination() -> String:
+	if _mapview == null: return ""
+	var m = _mapview.get_node_or_null("WorldMap")
+	return m.destination_name() if m != null else ""
+
+## Route waypoints in world space, for the HUD minimap / objective arrow.
+func map_route() -> Array:
+	if _mapview == null: return []
+	var m = _mapview.get_node_or_null("WorldMap")
+	return m._route if m != null else []
 
 func hud_show_settings() -> void:
 	if world == null: return
