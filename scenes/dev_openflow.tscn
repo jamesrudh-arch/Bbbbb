@@ -1,0 +1,4 @@
+[gd_scene load_steps=2 format=3]
+[ext_resource type="Script" path="res://scripts/dev_openflow.gd" id="1"]
+[node name="OF" type="Node"]
+script = ExtResource("1")

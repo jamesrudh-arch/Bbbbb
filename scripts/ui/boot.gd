@@ -192,7 +192,12 @@ func _save_notice() -> void:
 		f.close()
 
 func _depart() -> void:
-	Loader.goto_scene("res://scenes/main_menu.tscn", 0.4)
+	# A first-run session goes straight into the opening cinematic; returning
+	# players who have already seen it land on the menu instead.
+	if SaveFlags.opening_seen():
+		Loader.goto_scene("res://scenes/main_menu.tscn", 0.4)
+	else:
+		Loader.goto_scene("res://scenes/opening.tscn", 0.4)
 
 func _advance() -> void:
 	if _fading: return
