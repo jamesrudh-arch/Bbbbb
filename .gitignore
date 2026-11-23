@@ -1,0 +1,13 @@
+# Godot 4 import cache — rebuilt automatically on first open. Never commit.
+.godot/
+# Godot export output
+build/
+export/
+*.pck
+*.zip
+# Tooling deps (not part of the game)
+node_modules/
+# OS noise
+.DS_Store
+Thumbs.db
+*.tmp
