@@ -995,22 +995,15 @@ func build_street(origin: Vector3, dir: Vector3, length: float, type: int) -> No
 	add_child(street)
 
 	var d := dir.normalized()
-	var part := OS.get_environment("PART_ENV")   # PART_ENV: profiling switch
-	if part != "nofront":
-		for side in [-1.0, 1.0]:
-			shophouse_row(origin, d, length, side, type)
-	if part != "noprops":
-		populate_street(origin, d, length, type)
+	for side in [-1.0, 1.0]:
+		shophouse_row(origin, d, length, side, type)
+	populate_street(origin, d, length, type)
+	power_lines(origin, d, length, type)
+	chassis(origin, d, length, type)
 	# Street people are deliberately NOT built here. Every skinned figure carries a
-	# skeleton that cannot be batched, and building them for all four streets of
-	# all six districts at load put the scene over the point where the first frame
-	# ever completed. The city builder spawns them per rendered district instead.
-	if part == "forcepeople":
-		populate_people(origin, d, length, type)
-	if part != "nocables":
-		power_lines(origin, d, length, type)
-	if part != "noground":
-		chassis(origin, d, length, type)
+	# skeleton that cannot be batched, and building them for all four streets of all
+	# six districts during world load was enough to stop the scene ever completing a
+	# frame. The streamer spawns them per visible district instead.
 	return street
 
 # ================================================================== BATCHING
