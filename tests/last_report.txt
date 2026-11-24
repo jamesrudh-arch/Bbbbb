@@ -1,5 +1,5 @@
 LEVERAGE TEST REPORT
-2026-11-24T22:34:15
+2026-11-24T22:38:29
 
 PASS  content.districts==6  6
 PASS  districts have palettes+landmarks
@@ -85,7 +85,7 @@ PASS  scene loads: player.tscn
 PASS  project uses mobile renderer
 PASS  main scene is boot
 PASS  world instantiated
-PASS  world build under 60s  3575 ms
+PASS  world build under 60s  3440 ms
 PASS  six districts built  6
 PASS  districts populated  20088 objects
 PASS  sidewalk nav graph per district
