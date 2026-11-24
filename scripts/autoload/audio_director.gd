@@ -104,6 +104,27 @@ func start_world_audio() -> void:
 	_ambience.play()
 	set_music_state("explore")
 
+## Stop every player before the engine tears the audio server down. Music and
+## ambience loop forever by design, so unless they are stopped they are still
+## playing at exit and their playbacks are reported as leaked instances.
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_PREDELETE or what == NOTIFICATION_WM_CLOSE_REQUEST:
+		_stop_all()
+
+func _stop_all() -> void:
+	for p in [_music, _ambience]:
+		if p != null and is_instance_valid(p):
+			p.stop()
+	for p in _stingers:
+		if is_instance_valid(p):
+			p.stop()
+	for p in _ui:
+		if is_instance_valid(p):
+			p.stop()
+	for p in _pool:
+		if is_instance_valid(p):
+			p.stop()
+
 func stop_world_audio() -> void:
 	_world_started = false
 	_music.stop()
