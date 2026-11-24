@@ -1,0 +1,17 @@
+# Normalise line endings so the project opens identically on macOS/Windows/Linux.
+* text=auto eol=lf
+
+# Binary assets — never diff or merge these as text.
+*.glb binary
+*.png binary
+*.jpg binary
+*.wav binary
+*.res binary
+*.ttf binary
+*.otf binary
+
+# Godot scenes/scripts should diff as text.
+*.tscn text
+*.tres text
+*.gd text
+*.godot text

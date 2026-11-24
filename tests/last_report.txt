@@ -1,0 +1,117 @@
+LEVERAGE TEST REPORT
+2026-11-24T13:32:28
+
+PASS  content.districts==6  6
+PASS  districts have palettes+landmarks
+PASS  content.characters==16  16
+PASS  every character has a real model file
+PASS  content.missions==8  8
+PASS  content.disciplines==5
+PASS  discipline keys match spec
+PASS  content.weapons>=7  7
+PASS  content.vehicles>=8  8
+PASS  shop catalogue has items  22
+PASS  achievements==8
+PASS  radio has reports  8
+PASS  side jobs >= 3  3
+PASS  action exists: move_forward
+PASS  action exists: move_back
+PASS  action exists: move_left
+PASS  action exists: move_right
+PASS  action exists: sprint
+PASS  action exists: jump
+PASS  action exists: crouch
+PASS  action exists: lock_on
+PASS  action exists: punch
+PASS  action exists: heavy
+PASS  action exists: kick
+PASS  action exists: dodge
+PASS  action exists: block
+PASS  action exists: counter
+PASS  action exists: aim
+PASS  action exists: shoot
+PASS  action exists: reload
+PASS  action exists: weapon_switch
+PASS  action exists: interact
+PASS  action exists: enter_vehicle
+PASS  action exists: exit_vehicle
+PASS  action exists: steer_left
+PASS  action exists: steer_right
+PASS  action exists: throttle
+PASS  action exists: brake
+PASS  action exists: handbrake
+PASS  action exists: horn
+PASS  action exists: pause
+PASS  X=punch bound
+PASS  Y=heavy bound
+PASS  A=kick bound
+PASS  B=dodge bound
+PASS  save_game returns true
+PASS  slot_info reads back
+PASS  reset cleared money
+PASS  load_game returns true
+PASS  money restored  777
+PASS  xp restored  500
+PASS  flag restored
+PASS  discipline restored
+PASS  relationship restored  42
+PASS  collectible restored
+PASS  ammo restored
+PASS  stats restored
+PASS  buy_item succeeds
+PASS  money deducted  988
+PASS  heal applied  75.0
+PASS  weapon owned
+PASS  weapon equipped
+PASS  armor equipped
+PASS  armor gives protection
+PASS  cannot buy without money
+PASS  heat raises wanted level  2
+PASS  all 5 disciplines have distinct stat signatures  5
+PASS  brawler shortest reach but full damage
+PASS  grappling highest damage
+PASS  weapon longest reach
+PASS  kickboxing fastest
+PASS  riot armor strongest
+PASS  gun has mag/reserve: pistol
+PASS  gun has mag/reserve: smg
+PASS  gun has mag/reserve: shotgun
+PASS  all required audio files exist
+PASS  Audio.SFX ids resolve to files
+PASS  scene loads: boot.tscn
+PASS  scene loads: main_menu.tscn
+PASS  scene loads: world.tscn
+PASS  scene loads: player.tscn
+PASS  project uses mobile renderer
+PASS  main scene is boot
+PASS  world instantiated
+PASS  world build under 60s  291 ms
+PASS  six districts built  6
+PASS  districts populated  11811 objects
+PASS  sidewalk nav graph per district
+PASS  drive graph per district
+PASS  enterable portals exist  18 portals
+PASS  named characters spawned >= 12  16
+PASS  pedestrians spawned >= 20  25
+PASS  player in scene
+PASS  player camera active
+PASS  camera has target
+PASS  player inside ash_row bounds
+PASS  12 city fragments placed  12
+PASS  opening mission active  homecoming
+PASS  mission starts
+PASS  first objective is reach
+PASS  advance to talk
+PASS  advance to collect
+PASS  collect progress tracked  2
+PASS  collect objective completes
+PASS  mission completes  ["homecoming"]
+PASS  flag set on completion
+PASS  next mission unlocked
+PASS  choice pays out  3000
+PASS  choice flag recorded
+PASS  side job starts with job_ prefix
+PASS  job completes into completed_jobs
+PASS  job unlocks a discipline reward  ["brawler", "kickboxing"]
+
+PASSED: 112   FAILED: 0   TOTAL: 112
