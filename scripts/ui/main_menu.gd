@@ -192,6 +192,9 @@ func _menu_button(text: String) -> Button:
 	return b
 
 func _any_save() -> bool:
+	# An autosave is a save: without this, a player whose only save was written
+	# automatically sees no CONTINUE at all.
+	if not Game.slot_info(Game.AUTOSAVE_SLOT).is_empty(): return true
 	for i in Game.SLOT_COUNT:
 		if not Game.slot_info(i).is_empty(): return true
 	return false
@@ -218,12 +221,10 @@ func _new_game() -> void:
 	Loader.goto_world(true)
 
 func _continue_game() -> void:
-	var latest := -1
-	for i in Game.SLOT_COUNT:
-		var info := Game.slot_info(i)
-		if info.is_empty(): continue
-		if latest < 0 or str(info["saved_at"]) > str(Game.slot_info(latest).get("saved_at", "")):
-			latest = i
+	# Includes the autosave slot. Comparing slot numbers would be wrong (the
+	# autosave lives at slot 9 whatever the manual slots hold), so the newest
+	# saved_at wins, which Game owns.
+	var latest := Game.latest_save_slot()
 	if latest >= 0 and Game.load_game(latest):
 		Loader.goto_world(false)
 

@@ -428,13 +428,33 @@ func _slot_path(slot: int) -> String:
 const AUTOSAVE_SLOT := 9
 
 ## Newest slot the player can continue from, autosave included.
+## The most recently WRITTEN save, autosave included. Slot numbers are not
+## recency: slot 2 can hold a save from last week and slot 9 one from a minute
+## ago, so comparing slot numbers picks the wrong game. Read each file's own
+## saved_at and take the newest.
 func latest_save_slot() -> int:
-	for i in range(SLOT_COUNT - 1, -1, -1):
-		if FileAccess.file_exists(_slot_path(i)):
-			return i
-	if FileAccess.file_exists(_slot_path(AUTOSAVE_SLOT)):
-		return AUTOSAVE_SLOT
-	return -1
+	var best := -1
+	var best_at := ""
+	var candidates: Array = []
+	for i in SLOT_COUNT:
+		candidates.append(i)
+	candidates.append(AUTOSAVE_SLOT)
+	for i in candidates:
+		if not FileAccess.file_exists(_slot_path(i)):
+			continue
+		var f := FileAccess.open(_slot_path(i), FileAccess.READ)
+		if f == null: continue
+		var txt := f.get_as_text()
+		f.close()
+		var at := ""
+		var j: Variant = JSON.parse_string(txt)
+		if j is Dictionary:
+			at = str((j as Dictionary).get("saved_at", ""))
+		# ISO timestamps sort lexicographically; an unparseable save loses.
+		if at != "" and at >= best_at:
+			best_at = at
+			best = i
+	return best
 
 func autosave() -> void:
 	save_game(AUTOSAVE_SLOT)
