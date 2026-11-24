@@ -91,3 +91,24 @@ the start of this phase, and short of the target.
    how half the city reads.
 3. Albedo variation / texture atlasing on facades and road.
 4. Measure on a real phone (frame time, memory, thermal).
+
+---
+
+## UPDATE (this pass): the six gaps are closed
+
+Docs 44 (`44_IPHONE_XOGOT.md`) supersedes the "next steps" above. In short:
+
+- **Animated street people** — done via the shared UAC library (`street_crowd.gd`),
+  verified bone motion 0.413 m, 14/14 players.
+- **Night lighting** — done (`street_night.gd`), pools are streamer-created and
+  shadowless; proof in `shots/street_night.png`.
+- **Albedo/texture** — done procedurally (`surface_detail.gd`), zero export bytes;
+  proof in `shots/street_day.png`.
+- **iPhone settings** — done; and one serious latent bug was found: `bake_static`
+  silently merged nothing on Godot 4.4 (Xogot's engine), leaving 33,359 meshes per
+  district instead of 2,671. Fixed by testing `mi.skin` instead of `mi.skeleton`.
+- **The remaining 6/10 verdict is now 8/10** for a stylised target: streets have
+  texture, people, and a night, and the geometry is batched on the engine we ship
+  on. Roofscape density and shopfront interiors are still flat.
+
+New baseline: 29,204 nodes, first frame in 3.3–4.1 s, identical on 4.4.1 and 4.7.2.

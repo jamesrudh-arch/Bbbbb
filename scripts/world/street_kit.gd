@@ -1194,7 +1194,7 @@ func _tint_person(root: Node) -> void:
 				"Skin": mat.albedo_color = skin
 				"Face": mat.albedo_color = skin.lerp(Color(1, 1, 1), 0.34)
 				"Shirt": mat.albedo_color = shirt
-				"Pants": mat.albedo_color = Color(0.14, 0.15, 0.19).lerp(shirt, 0.16)
+				"Pants": mat.albedo_color = Color(0.23, 0.26, 0.34).lerp(shirt, 0.14)
 				"Belt": mat.albedo_color = Color(0.10, 0.08, 0.07)
 				"Hair": mat.albedo_color = Color(0.08, 0.06, 0.05)
 				_: mat.albedo_color = src.albedo_color

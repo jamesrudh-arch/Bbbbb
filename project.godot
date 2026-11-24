@@ -39,6 +39,7 @@ window/stretch/mode="canvas_items"
 ; "expand" is correct for iPhone: it keeps the 16:9 authoring frame and reveals
 ; more world in the notch/tall-screen area rather than letterboxing it.
 window/stretch/aspect="expand"
+window/stretch/scale_mode="fractional"
 window/handheld/orientation=4
 window/vsync/vsync_mode=1
 ; hud.gd reads DisplayServer.get_display_safe_area() at runtime to keep the
@@ -88,6 +89,7 @@ lights_and_shadows/positional_shadow/soft_shadow_filter_quality=1
 environment/defaults/default_clear_color=Color(0.043, 0.047, 0.059, 1)
 driver/depth_prepass/enable=true
 textures/vram_compression/import_etc2_astc=true
+textures/vram_compression/import_s3tc_bptc=true
 
 [threading]
 

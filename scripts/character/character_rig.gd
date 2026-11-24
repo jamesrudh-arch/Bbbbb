@@ -115,7 +115,7 @@ func _tint_materials(root: Node) -> void:
 				"Skin": mat.albedo_color = skin
 				"Face": mat.albedo_color = skin.lerp(Color(1,1,1), 0.35)
 				"Shirt": mat.albedo_color = shirt
-				"Pants": mat.albedo_color = Color(0.13, 0.14, 0.18).lerp(shirt, 0.18)
+				"Pants": mat.albedo_color = Color(0.23, 0.26, 0.34).lerp(shirt, 0.14)
 				"Belt": mat.albedo_color = Color(0.10, 0.08, 0.07)
 				"Hair": mat.albedo_color = Color(0.09, 0.06, 0.05).lerp(Color(0.25,0.16,0.10), randf())
 				_: mat.albedo_color = src.albedo_color if src.albedo_color != Color.BLACK else Color(0.5,0.5,0.5)
