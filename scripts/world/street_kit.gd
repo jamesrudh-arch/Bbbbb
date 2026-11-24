@@ -1036,9 +1036,17 @@ func bake_static(root: Node) -> int:
 		if n is MeshInstance3D:
 			var mi := n as MeshInstance3D
 			if mi.mesh == null: continue
-			# skinned characters are driven by bones; merging them and freeing
-			# the skeleton makes every person vanish
-			if mi.skeleton != NodePath():
+			# Skinned characters are driven by bones; merging them and freeing
+			# the skeleton makes every person vanish.
+			#
+			# Test `skin`, NOT `skeleton`. On Godot 4.4 (the engine Xogot ships
+			# on) a freshly created MeshInstance3D reports skeleton == ".."
+			# rather than an empty NodePath, so `skeleton != NodePath()` was true
+			# for every mesh in the world and this function merged nothing at
+			# all — silently. That left 33,000 unbatched meshes per district, a
+			# frame cost no iPhone can absorb. `skin` is null on both 4.4 and 4.7
+			# for static geometry and non-null for a real skinned figure.
+			if mi.skin != null:
 				continue
 			var mat: Material = mi.material_override
 			if not by_mat.has(mat):
