@@ -12,6 +12,9 @@ var _quality := 2
 var _slow_frames := 0
 
 const FAR_RANGE := 145.0
+## Draw range for full district geometry. Kept equal to the simulation range:
+## with authored streets a district is visually dense, so anything beyond one
+## block away is fog anyway and not worth the draw calls.
 
 func setup(w: Node3D, d: Dictionary) -> void:
 	world = w
@@ -28,7 +31,7 @@ func _process(delta: float) -> void:
 		var d := Vector2(pp.x - c.x, pp.z - c.z).length()
 		var near := d < FAR_RANGE
 		var node: Node3D = districts[id]
-		node.visible = near or d < 260.0
+		node.visible = d < FAR_RANGE
 		# Freeze distant simulation flags consumed by NPC / traffic actors.
 		node.set_meta("sim_active", near)
 	_scale_quality()

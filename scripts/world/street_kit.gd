@@ -475,14 +475,14 @@ func chassis(origin: Vector3, dir: Vector3, length: float, type: int) -> Node3D:
 	# what stops large flat surfaces looking like untextured blockout.
 	var patch_col := Color(0.135, 0.14, 0.155)
 	var crack_col := Color(0.105, 0.11, 0.125)
-	var n := int(length * 0.55)
+	var n := int(length * 0.30)
 	for i in n:
 		var px := _rng.randf_range(-half, half)
 		var pz := _rng.randf_range(-CH_ROAD_W * 0.44, CH_ROAD_W * 0.44)
 		var w := _rng.randf_range(0.8, 3.4)
 		var d := _rng.randf_range(0.5, 2.2)
 		_cbox(root, Vector3(w, 0.01, d), Vector3(px, 0.105, pz), patch_col, 0.97)
-	for i in int(length * 0.35):
+	for i in int(length * 0.16):
 		var cx := _rng.randf_range(-half, half)
 		var cz := _rng.randf_range(-CH_ROAD_W * 0.45, CH_ROAD_W * 0.45)
 		var cl := _rng.randf_range(1.0, 4.0)
@@ -575,19 +575,16 @@ func shophouse(pos: Vector3, rot_y: float, w: float, d: float, floors: int,
 	var plinth_mat := _mat(_q(plinth_col), 0.96)
 
 	# --- COLLISION ---------------------------------------------------------
-	# A building with no collision is a stage flat: the player walks straight
-	# through it and the city stops being a place. One box for the whole mass,
-	# offset to match whichever massing this storey count produces.
-	var solid := StaticBody3D.new()
-	solid.collision_layer = 1
-	solid.collision_mask = 0
+	# Collision shapes are parked on the node so the row can collect them into a
+	# single body. One StaticBody3D per shophouse is thousands of bodies across a
+	# city and dominates frame time; one body per street with many shapes is what
+	# the physics server is built for.
 	var cshape := CollisionShape3D.new()
 	var cbox := BoxShape3D.new()
 	cbox.size = Vector3(w, h, d)
 	cshape.shape = cbox
 	cshape.position = Vector3(0, h * 0.5, -d * 0.5)
-	solid.add_child(cshape)
-	n.add_child(solid)
+	n.add_child(cshape)
 
 	# --- MASSING -----------------------------------------------------------
 	# Ground floor: set back, so the upper floors cast a shadow over it.
@@ -834,6 +831,12 @@ func shophouse_row(origin: Vector3, dir: Vector3, length: float, side: float,
 			paints = [Color(0.68, 0.64, 0.58)]
 			accents = [Color(0.80, 0.50, 0.20)]
 
+	var body := StaticBody3D.new()
+	body.name = "RowBody"
+	body.collision_layer = 1
+	body.collision_mask = 0
+	root.add_child(body)
+
 	var t := 0.0
 	while t < length - 4.0:
 		var w: float = _rng.randf_range(5.4, 8.6)
@@ -852,7 +855,17 @@ func shophouse_row(origin: Vector3, dir: Vector3, length: float, side: float,
 		var p := Vector3(t + w_use * 0.5, 0.0, base_z)
 		# Depth is capped at MAX_DEPTH so the building stays inside the corridor
 		# reserved for it; deeper blocks would clash with the next street over.
-		shophouse(p, rot, w_use, minf(_rng.randf_range(9.0, 15.0), MAX_DEPTH), floors, paint, accent, root)
+		var house := shophouse(p, rot, w_use, minf(_rng.randf_range(9.0, 15.0), MAX_DEPTH),
+			floors, paint, accent, root)
+		# move the collision shape onto the row's single body, keeping the world
+		# placement it was given inside the house node
+		for ch in house.get_children():
+			if ch is CollisionShape3D:
+				var cs2 := ch as CollisionShape3D
+				house.remove_child(cs2)
+				var world_xf: Transform3D = house.transform * cs2.transform
+				cs2.transform = world_xf
+				body.add_child(cs2)
 		t += w_use + _rng.randf_range(0.0, 0.45)   # party-wall gap
 	return root
 
@@ -982,11 +995,16 @@ func build_street(origin: Vector3, dir: Vector3, length: float, type: int) -> No
 	add_child(street)
 
 	var d := dir.normalized()
-	chassis(origin, d, length, type)
-	for side in [-1.0, 1.0]:
-		shophouse_row(origin, d, length, side, type)
-	populate_street(origin, d, length, type)
-	power_lines(origin, d, length, type)
+	var part := OS.get_environment("PART_ENV")   # PART_ENV: profiling switch
+	if part != "nofront":
+		for side in [-1.0, 1.0]:
+			shophouse_row(origin, d, length, side, type)
+	if part != "noprops":
+		populate_street(origin, d, length, type)
+	if part != "nocables":
+		power_lines(origin, d, length, type)
+	if part != "noground":
+		chassis(origin, d, length, type)
 	return street
 
 # ================================================================== BATCHING

@@ -63,6 +63,9 @@ const DISTRICT_STREETS := {
 func _build_streets(root: Node3D, id: String, _info: Dictionary, rng: RandomNumberGenerator) -> void:
 	var kit_script = load("res://scripts/world/street_kit.gd")
 	if kit_script == null: return
+	if Content.has_meta("no_streets") and bool(Content.get_meta("no_streets")):
+		return
+	var only := str(Content.get_meta("only_part", ""))
 	var kit = kit_script.new()
 	kit.set_seed(int(rng.randi()))
 	root.add_child(kit)
@@ -80,6 +83,8 @@ func _build_streets(root: Node3D, id: String, _info: Dictionary, rng: RandomNumb
 	var mid: float = pitch * 0.5
 
 	var v := 0
+	if only == "collision":
+		pass
 	# Streets running along the X axis, on the block lines.
 	for z in [-mid, mid]:
 		var st: Node3D = kit.get_street(type, v, span)
