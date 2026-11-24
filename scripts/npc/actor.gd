@@ -68,7 +68,6 @@ func _build() -> void:
 
 	# Contact shadow — a cheap grounding cue that reads on mobile without
 	# costing a real shadow map per actor.
-	var shadow := MeshInstance3D.new()
 	var dm := Decal.new()
 	dm.size = Vector3(1.1, 0.6, 1.1)
 	var tex := GradientTexture2D.new()
@@ -81,7 +80,6 @@ func _build() -> void:
 	dm.texture_albedo = tex
 	dm.position = Vector3(0, 0.06, 0)
 	add_child(dm)
-	shadow.queue_free()
 
 	var shape := CollisionShape3D.new()
 	var cap := CapsuleShape3D.new()

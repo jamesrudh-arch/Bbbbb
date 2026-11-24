@@ -42,9 +42,59 @@ func build_district(id: String) -> Node3D:
 	_build_props(root, id, info, rng)
 	_build_parked_vehicles(root, id, info, rng)
 	_build_landmarks(root, id, info, rng)
+	_build_streets(root, id, info, rng)
 	_build_nav(root, id)
 	_build_drive_graph(root, id)
 	return root
+
+# ---------------------------------------------------------------- streets
+## Each district gets a street character drawn from its own identity, so the
+## six areas do not all read the same. Research on game cities is consistent
+## that each district needs its own dominant hue and street behaviour.
+const DISTRICT_STREETS := {
+	"ash_row": 0,          # MARKET
+	"guttermarket": 0,     # MARKET
+	"iron_yard": 3,        # INDUSTRIAL
+	"cinder_line": 1,      # TRANSIT
+	"vesper_heights": 4,   # CORPORATE
+	"neon_mile": 5,        # NIGHTLIFE
+}
+
+func _build_streets(root: Node3D, id: String, _info: Dictionary, rng: RandomNumberGenerator) -> void:
+	var kit_script = load("res://scripts/world/street_kit.gd")
+	if kit_script == null: return
+	var kit = kit_script.new()
+	kit.set_seed(int(rng.randi()))
+	root.add_child(kit)
+	var type: int = int(DISTRICT_STREETS.get(id, 0))
+
+	# Layout. A street occupies 38 m across: 12 m of road, 3 m of pavement each
+	# side, and up to 10 m of frontage each side. Streets are therefore set on a
+	# 76 m pitch so that facing frontages meet back-to-back with no gap and no
+	# overlap. Each street is built full length and the junctions are simply
+	# where two of them cross; nothing is cut short, because a street that stops
+	# mid-block reads as a dead end.
+	var half_width: float = ROAD_W * 0.5 + SIDEWALK_W + 10.0      # 19 m
+	var pitch: float = half_width * 4.0                           # 76 m
+	var span: float = pitch * 2.0 + 8.0                           # 160 m, overlaps at the junction
+	var mid: float = pitch * 0.5
+
+	var v := 0
+	# Streets running along the X axis, on the block lines.
+	for z in [-mid, mid]:
+		var st: Node3D = kit.get_street(type, v, span)
+		st.name = "Street_Z%d" % int(z)
+		st.position = Vector3(-span * 0.5, 0.0, z)
+		root.add_child(st)
+		v += 1
+	# Streets running along the Z axis, crossing them.
+	for x in [-mid, mid]:
+		var st2: Node3D = kit.get_street(type, v, span)
+		st2.name = "Street_X%d" % int(x)
+		st2.position = Vector3(x, 0.0, -span * 0.5)
+		st2.rotation.y = PI * 0.5
+		root.add_child(st2)
+		v += 1
 
 # ---------------------------------------------------------------- ground
 func _build_ground(root: Node3D, info: Dictionary, _rng: RandomNumberGenerator) -> void:
