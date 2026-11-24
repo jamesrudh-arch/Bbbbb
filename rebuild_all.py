@@ -18,18 +18,21 @@ OK = []
 FAIL = []
 
 
-def patch(path, old, new, label, count=1):
+def patch(path, old, new, label, count=1, also_done=None):
     """Replace `old` with `new` in `path`, requiring exactly `count` matches."""
     if not os.path.exists(path):
         FAIL.append(f"{label}: MISSING FILE {path}")
         return False
     src = open(path, encoding="utf-8").read()
-    if new in src and old not in src:
-        OK.append(f"{label}: already applied")
-        return True
-    if old in src and new in src:
-        # Partially applied (e.g. an earlier patch inserted a marker). Treat the
-        # presence of the finished text as done rather than doubling it.
+    for marker in (also_done or []):
+        if marker in src:
+            OK.append(f"{label}: already applied")
+            return True
+    if new in src:
+        # Already applied. This must be checked FIRST and unconditionally: an
+        # earlier patch's OUTPUT can contain a later patch's `old` anchor (the
+        # autosave block quotes its own old text in a doc comment), so asking
+        # "is old still present" re-applies it and duplicates the whole block.
         OK.append(f"{label}: already applied")
         return True
     n = src.count(old)
@@ -369,28 +372,88 @@ func _show_stage(stage: int) -> void:
         "completeness: returning players skip the studio card",
     )
 
-    # 4f. autosave support. The save API is save_game(slot) / _slot_path(slot)
-    #     with SLOT_COUNT slots; there was no notion of a "latest" save, so the
-    #     CONTINUE path could not find an autosave.
+    # 4f. autosave support is provided by 4f2 below, which writes the
+    #     timestamp-comparing latest_save_slot() directly. (An earlier version
+    #     of this script had two steps here and re-inserted the first one's
+    #     output; see the idempotency note at the top of patch().)
+
+    # 4f2. CONTINUE must be able to see the autosave, and must pick the newest
+    #      save by timestamp rather than by slot number.
     patch(
         "scripts/autoload/game.gd",
-        "func save_game(slot: int) -> bool:",
-        """const AUTOSAVE_SLOT := 9
-
-## Newest slot the player can continue from, autosave included.
-func latest_save_slot() -> int:
+        """func latest_save_slot() -> int:
 	for i in range(SLOT_COUNT - 1, -1, -1):
 		if FileAccess.file_exists(_slot_path(i)):
 			return i
 	if FileAccess.file_exists(_slot_path(AUTOSAVE_SLOT)):
 		return AUTOSAVE_SLOT
-	return -1
+	return -1""",
+        """## The most recently WRITTEN save, autosave included. Slot numbers are not
+## recency: slot 2 can hold a save from last week and slot 9 one from a minute
+## ago, so comparing slot numbers picks the wrong game. Read each file's own
+## saved_at and take the newest.
+func latest_save_slot() -> int:
+	var best := -1
+	var best_at := ""
+	var candidates: Array = []
+	for i in SLOT_COUNT:
+		candidates.append(i)
+	candidates.append(AUTOSAVE_SLOT)
+	for i in candidates:
+		if not FileAccess.file_exists(_slot_path(i)):
+			continue
+		var f := FileAccess.open(_slot_path(i), FileAccess.READ)
+		if f == null: continue
+		var txt := f.get_as_text()
+		f.close()
+		var at := ""
+		var j: Variant = JSON.parse_string(txt)
+		if j is Dictionary:
+			at = str((j as Dictionary).get("saved_at", ""))
+		if at != "" and at >= best_at:
+			best_at = at
+			best = i
+	return best""",
+        "completeness: latest save is chosen by time, not slot number",
+        also_done=['and take the newest.'],
+    )
 
-func autosave() -> void:
-	save_game(AUTOSAVE_SLOT)
+    patch(
+        "scripts/ui/main_menu.gd",
+        """func _any_save() -> bool:
+	for i in Game.SLOT_COUNT:
+		if not Game.slot_info(i).is_empty(): return true
+	return false""",
+        """func _any_save() -> bool:
+	# An autosave is a save: without this, a player whose only progress was
+	# written automatically sees no CONTINUE at all.
+	if not Game.slot_info(Game.AUTOSAVE_SLOT).is_empty(): return true
+	for i in Game.SLOT_COUNT:
+		if not Game.slot_info(i).is_empty(): return true
+	return false""",
+        "completeness: CONTINUE offered when only an autosave exists",
+        also_done=['# An autosave is a save: without this, a player whose only save was written'],
+    )
 
-func save_game(slot: int) -> bool:""",
-        "completeness: autosave slot + latest_save_slot",
+    patch(
+        "scripts/ui/main_menu.gd",
+        """func _continue_game() -> void:
+	var latest := -1
+	for i in Game.SLOT_COUNT:
+		var info := Game.slot_info(i)
+		if info.is_empty(): continue
+		if latest < 0 or str(info["saved_at"]) > str(Game.slot_info(latest).get("saved_at", "")):
+			latest = i
+	if latest >= 0 and Game.load_game(latest):
+		Loader.goto_world(false)""",
+        """func _continue_game() -> void:
+	# Includes the autosave slot. Slot numbers are not recency - the autosave
+	# lives at 9 whatever the manual slots hold - so the newest saved_at wins.
+	var latest := Game.latest_save_slot()
+	if latest >= 0 and Game.load_game(latest):
+		Loader.goto_world(false)""",
+        "completeness: CONTINUE loads the newest save",
+        also_done=['var latest := Game.latest_save_slot()'],
     )
 
     # 4g. autosave at mission completion: losing an hour of progress to a crash
