@@ -97,6 +97,44 @@ func _build() -> void:
 	_build_menu()
 	_build_shop()
 	_build_phone()
+	# Must run after the widgets exist: it shifts the root control inwards.
+	apply_safe_area()
+
+# ---------------------------------------------------------------- safe area
+## iPhone home-indicator and notch insets.
+##
+## On iPhone the bottom of the screen is a gesture bar and the top-left is a
+## notch/Dynamic Island. A control anchored to BOTTOM_LEFT at a fixed offset sits
+## either under the gesture bar (where the swipe is claimed by iOS) or clipped.
+## DisplayServer reports the usable rectangle in real pixels; converting it to
+## the canvas_items design space and offsetting the HUD root keeps every widget
+## physically where the thumb and the eye expect it, on every iPhone size.
+##
+## Godot returns an all-zero rect on desktop, so this is a no-op there.
+func apply_safe_area() -> void:
+	if root == null:
+		return
+	var safe := Rect2(Vector2.ZERO, Vector2.ZERO)
+	if DisplayServer.has_method("get_display_safe_area"):
+		safe = DisplayServer.get_display_safe_area()
+	var win := Vector2(DisplayServer.window_get_size())
+	if win.x <= 0.0 or win.y <= 0.0 or safe.size.x <= 0.0 or safe.size.y <= 0.0:
+		return
+	# Convert the inset from real device pixels into the design space of the
+	# stretch mode. The HUD is authored against a 1280x720 canvas.
+	var design := Vector2(get_viewport().get_visible_rect().size)
+	var sx := design.x / win.x
+	var sy := design.y / win.y
+	var left := safe.position.x * sx
+	var right := (win.x - safe.position.x - safe.size.x) * sx
+	var top := safe.position.y * sy
+	var bottom := (win.y - safe.position.y - safe.size.y) * sy
+	if left == 0.0 and right == 0.0 and top == 0.0 and bottom == 0.0:
+		return
+	root.offset_left = left
+	root.offset_top = top
+	root.offset_right = -right
+	root.offset_bottom = -bottom
 
 # ---------------------------------------------------------------- helpers
 func _panel(bg: Color = INK, radius: int = 14) -> PanelContainer:

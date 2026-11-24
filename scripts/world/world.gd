@@ -15,6 +15,9 @@ extends Node3D
 @onready var fx: Node3D = $FX
 @onready var rain: GPUParticles3D = $Rain
 @onready var sun: DirectionalLight3D = $Sun
+## 0 = full day, 1 = full night. The streamer applies this to the night pools it
+## creates, and re-applies it when a new district becomes visible.
+var night_factor := 0.0
 @onready var moon: DirectionalLight3D = $Moon
 @onready var environment: WorldEnvironment = $WorldEnvironment
 @onready var player: CharacterBody3D = $Player
@@ -60,6 +63,10 @@ func _ready() -> void:
 		var d: Node3D = builder.build_district(id)
 		add_child(d)
 		districts[id] = d
+		# Night light pools are NOT built here. Like the street crowd, a light in
+		# a district nobody can see is pure cost: on iPhone the renderer still
+		# has to consider every retained light. The streamer creates them when a
+		# district first becomes visible, exactly as it does for people.
 
 	if dev.has("hour"):
 		Game.hour = float(dev["hour"])
@@ -140,12 +147,20 @@ func _apply_time() -> void:
 	moon.light_energy = (1.0 - daylight) * 1.25
 	moon.rotation = Vector3(-0.9, azimuth + PI, 0.0)
 	var env: Environment = environment.environment
-	env.ambient_light_energy = lerpf(1.45, 1.6, daylight)
 	env.fog_light_color = Color(0.06, 0.075, 0.11).lerp(Color(0.55, 0.62, 0.72), daylight)
 	env.fog_density = lerpf(0.011, 0.0022, daylight)
 	env.background_color = Color(0.03, 0.04, 0.075).lerp(Color(0.58, 0.68, 0.84), daylight)
 	env.background_energy_multiplier = lerpf(0.9, 1.15, daylight)
 	env.glow_intensity = lerpf(0.85, 0.35, daylight)
+
+	# Night art direction. The sun/moon alone gives a grey city after dark; the
+	# emissive materials plus the street pools are what make it read as night.
+	# One shared factor; the streamer applies it to whatever pools exist.
+	night_factor = preload("res://scripts/world/street_night.gd").factor_for_hour(h)
+	# Pull ambient down and blue it out as night falls, so lit shopfronts carry
+	# the frame instead of a flat fill light.
+	env.ambient_light_color = Color(0.30, 0.36, 0.50).lerp(Color(0.42, 0.46, 0.55), daylight)
+	env.ambient_light_energy = lerpf(0.55, 1.6, daylight)
 	if hud: hud.set_clock(h, Game.weather, int(lerpf(12, 31, daylight)))
 
 func _apply_weather() -> void:

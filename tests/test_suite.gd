@@ -36,6 +36,10 @@ func _run() -> void:
 	print("  [step] world")
 	await _test_world()
 	print("  [step] missions")
+	# _test_world leaves a fully built city in the tree. Mission tests are pure
+	# Game-state, so holding 1.3 GB of city nodes alive across them only makes
+	# the suite look hung on machines with a tight memory ceiling.
+	_maybe_free_world()
 	_test_mission_flow()
 	_report()
 	get_tree().quit(0 if failed == 0 else 1)
@@ -193,6 +197,7 @@ func _test_world() -> void:
 	var t0 := Time.get_ticks_msec()
 	var world = load("res://scenes/world.tscn").instantiate()
 	add_child(world)
+	_test_world_node = world
 	await get_tree().process_frame
 	await get_tree().process_frame
 	var ms := Time.get_ticks_msec() - t0
@@ -235,6 +240,17 @@ func _test_world() -> void:
 	_ok("12 city fragments placed", frags == 12, str(frags))
 	# mission auto-start
 	_ok("opening mission active", not Game.mission.is_empty(), str(Game.mission.get("id", "")))
+
+## The city built by _test_world, kept only so it can be released before the
+## mission tests run.
+var _test_world_node: Node = null
+
+func _maybe_free_world() -> void:
+	if _test_world_node != null and is_instance_valid(_test_world_node):
+		# free(), not queue_free(): the point is to release it BEFORE the next
+		# step, and queue_free defers to the end of the frame.
+		_test_world_node.free()
+		_test_world_node = null
 
 func _count_descendants(n: Node) -> int:
 	var c := n.get_child_count()

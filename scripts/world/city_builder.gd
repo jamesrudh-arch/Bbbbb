@@ -7,6 +7,12 @@ extends Node3D
 
 # Kenney kits are authored at 1 unit = 1 m but the city kits read small, so the
 # established scale factor is 10x for city geometry and 1.8x for vehicles.
+## Animated pedestrians per district. Each one is a skeleton driven by a single
+## shared AnimationPlayer, so the cost is the skinning, not the player. Fourteen
+## is the point where a walk down a street feels populated without the GPU
+## spending its frame on skinning.
+const ANIMATED_CROWD := 14
+
 const CITY_SCALE := 10.0
 const VEHICLE_SCALE := 1.8
 
@@ -17,6 +23,7 @@ const SIDEWALK_W := 3.0
 var nav_nodes: Dictionary = {}     # district -> Array[Vector3] (sidewalk graph)
 var drive_graph: Dictionary = {}   # district -> Array[Vector3] (road centre graph)
 var model_cache: Dictionary = {}
+var _surface_cache: Dictionary = {}
 
 # ---------------------------------------------------------------- public API
 func district_center(id: String) -> Vector3:
@@ -114,8 +121,19 @@ func _spawn_street_people(root: Node3D, id: String) -> void:
 	var span_pitch: float = 76.0
 	var span: float = span_pitch * 2.0 + 8.0
 	var mid: float = span_pitch * 0.5
-	# one street's worth of people, on the street facing the district centre
-	kit.populate_people(Vector3(-span * 0.5, 0.0, -mid), Vector3(1, 0, 0), span, type)
+	# One street's worth of people, on the street facing the district centre.
+	# These are the static, batched figures: they cost almost nothing and they
+	# make the far pavement read as inhabited.
+	var from := Vector3(-span * 0.5, 0.0, -mid)
+	kit.populate_people(from, Vector3(1, 0, 0), span, type)
+
+	# Then the animated ones, on the same street. These are capped and have
+	# skeletons, so they are the expensive half; the static crowd is what fills
+	# the street behind them.
+	var crowd = load("res://scripts/world/street_crowd.gd").new()
+	crowd.name = "AnimatedCrowd"
+	root.add_child(crowd)
+	crowd.build(from, Vector3(1, 0, 0), span, ANIMATED_CROWD, int(hash(id)))
 
 # ---------------------------------------------------------------- ground
 func _build_ground(root: Node3D, info: Dictionary, _rng: RandomNumberGenerator) -> void:
@@ -151,9 +169,20 @@ func _build_roads(root: Node3D, id: String, info: Dictionary, rng: RandomNumberG
 	road_root.name = "Roads"
 	root.add_child(road_root)
 
+	# Textured asphalt. A road that is one flat grey has no sense of scale - you
+	# cannot tell a 3 m lane from a 30 m apron. The grain comes from a shared
+	# procedural tile (surface_detail.gd), triplanar because box meshes carry no
+	# UVs, so the whole city still ships zero texture files.
 	var asphalt := StandardMaterial3D.new()
 	asphalt.albedo_color = Color(0.20, 0.205, 0.225)
 	asphalt.roughness = 0.82
+	var grain := _surface("grain")
+	if grain != null:
+		asphalt.albedo_texture = grain
+		asphalt.uv1_triplanar = true
+		asphalt.uv1_triplanar_sharpness = 4.0
+		asphalt.uv1_scale = Vector3.ONE * 0.55      # tight grain at this scale
+		asphalt.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
 
 	# Two cross streets per district, matching the 40 m block pitch.
 	for i in [-1, 1]:
@@ -246,9 +275,18 @@ func _build_roads(root: Node3D, id: String, info: Dictionary, rng: RandomNumberG
 # ---------------------------------------------------------------- sidewalks
 func _build_sidewalks(root: Node3D, id: String, info: Dictionary, _rng: RandomNumberGenerator) -> void:
 	var pal: Dictionary = info["palette"]
+	# Pavement gets the coarse mottle: slabs should read as slabs, not as one
+	# continuous ribbon of colour.
 	var walk := StandardMaterial3D.new()
 	walk.albedo_color = pal["wall"].lightened(0.28)
 	walk.roughness = 0.9
+	var mottle := _surface("mottle")
+	if mottle != null:
+		walk.albedo_texture = mottle
+		walk.uv1_triplanar = true
+		walk.uv1_triplanar_sharpness = 8.0
+		walk.uv1_scale = Vector3.ONE * 0.18
+		walk.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
 	var sw := Node3D.new()
 	sw.name = "Sidewalks"
 	root.add_child(sw)
@@ -528,6 +566,18 @@ func _build_props(root: Node3D, id: String, info: Dictionary, rng: RandomNumberG
 		mi.position = Vector3(x, b.size.y * 0.5, z)
 		mi.rotation.y = rng.randf_range(0, TAU)
 		p_root.add_child(mi)
+
+## Shared procedural surface tile. Returns null if the generator is missing,
+## which degrades to the old flat-colour look instead of failing the build.
+func _surface(kind: String) -> Texture2D:
+	if _surface_cache.has(kind):
+		return _surface_cache[kind]
+	var sd = load("res://scripts/world/surface_detail.gd")
+	var t: Texture2D = null
+	if sd != null:
+		t = sd.grain() if kind == "grain" else sd.mottle()
+	_surface_cache[kind] = t
+	return t
 
 # ---------------------------------------------------------------- vehicles
 func _build_parked_vehicles(root: Node3D, id: String, info: Dictionary, rng: RandomNumberGenerator) -> void:

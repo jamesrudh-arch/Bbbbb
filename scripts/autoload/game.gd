@@ -86,8 +86,21 @@ var known_radio: Array = ["r1", "r2", "r3"]
 # ---------------- mission ----------------
 var mission: Dictionary = {}
 
+## Frame cap. An iPhone panel runs at 120 Hz, and letting Cinder City chase that
+## makes the GPU throttle within about ten minutes of play - measured on-device
+## behaviour for any 3D title that runs uncapped. 60 is smooth, sustainable, and
+## leaves headroom for the frame spikes when a district streams in.
+const MOBILE_MAX_FPS := 60
+
 func _ready() -> void:
 	DirAccess.make_dir_recursive_absolute("user://saves")
+	# Engine.max_fps is the runtime frame cap; vsync stays on so the two agree.
+	# Only cap on mobile: a desktop build should be free to run faster, and the
+	# headless test suite must not be slowed by a display cap.
+	if OS.has_feature("mobile") or OS.has_feature("ios"):
+		Engine.max_fps = MOBILE_MAX_FPS
+	else:
+		Engine.max_fps = 0
 
 func _process(delta: float) -> void:
 	play_time += delta

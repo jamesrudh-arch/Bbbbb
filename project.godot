@@ -1,6 +1,8 @@
 ; LEVERAGE — Cinder City
-; Engine: Godot 4.7.2-stable, Mobile renderer (Vulkan/Metal), target: iPhone via Xogot.
+; Engine: Godot 4.4 API level (Xogot ships Godot 4.4), Mobile renderer, target: iPhone.
 ; This file is the single project configuration. Do not duplicate.
+; Feature level is 4.4 deliberately: Xogot for iPhone/iPad is built on Godot 4.4
+; (docs.xogot.com FAQ), and a project tagged 4.7 will not open there.
 
 config_version=5
 
@@ -10,7 +12,7 @@ config/name="LEVERAGE"
 config/description="Everyone has leverage on you."
 config/version="1.0.0"
 run/main_scene="res://scenes/boot.tscn"
-config/features=PackedStringArray("4.7", "Mobile")
+config/features=PackedStringArray("4.4", "Mobile")
 config/icon="res://icon.svg"
 boot_splash/bg_color=Color(0.043, 0.047, 0.059, 1)
 boot_splash/show_image=false
@@ -34,9 +36,13 @@ Loader="*res://scripts/autoload/scene_loader.gd"
 window/size/viewport_width=1280
 window/size/viewport_height=720
 window/stretch/mode="canvas_items"
+; "expand" is correct for iPhone: it keeps the 16:9 authoring frame and reveals
+; more world in the notch/tall-screen area rather than letterboxing it.
 window/stretch/aspect="expand"
 window/handheld/orientation=4
 window/vsync/vsync_mode=1
+; hud.gd reads DisplayServer.get_display_safe_area() at runtime to keep the
+; thumbstick off the home indicator; nothing needs to be set here for that.
 
 [input_devices]
 
@@ -62,7 +68,10 @@ pointing/emulate_mouse_from_touch=true
 [physics]
 
 3d/default_gravity=18.0
-common/physics_ticks_per_second=60
+; Mobile tuning: static city geometry plus a handful of actors means a 30 Hz
+; physics tick is indistinguishable in play and halves the CPU cost of stepping,
+; which is what keeps the frame budget free for rendering on an iPhone.
+common/physics_ticks_per_second=30
 
 [rendering]
 

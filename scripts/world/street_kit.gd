@@ -57,6 +57,7 @@ func set_seed(s: int) -> void:
 ## cannot merge two surfaces that use different resources even when they look
 ## identical. Keyed on the exact parameters that affect appearance.
 var _mat_cache: Dictionary = {}
+var _detail_cache: Dictionary = {}
 
 ## Snap a colour to a coarse grid. Colours that differ imperceptibly can then
 ## share one material, which is what keeps the merged draw-call count sane.
@@ -73,6 +74,42 @@ func _mat(c: Color, rough: float = 0.85, metal: float = 0.0) -> StandardMaterial
 	m.metallic = metal
 	_mat_cache[key] = m
 	return m
+
+## Painted wall material with a real albedo texture under the colour.
+##
+## A facade with a single albedo value has no age and no scale - it reads as a
+## flat card. Multiplying a shared 256 px mottle over the paint costs one texture
+## for the whole city (see surface_detail.gd) and gives every wall a stain, so
+## neighbouring buildings in the same colour stop merging into one slab.
+func _wall_mat(c: Color, rough: float = 0.88) -> StandardMaterial3D:
+	var key := "w_%0.4f_%0.4f_%0.4f_%0.3f" % [c.r, c.g, c.b, rough]
+	if _mat_cache.has(key):
+		return _mat_cache[key]
+	var m := StandardMaterial3D.new()
+	m.albedo_color = c
+	m.roughness = rough
+	m.metallic = 0.0
+	var tex: Texture2D = _detail_tex("mottle")
+	if tex != null:
+		m.albedo_texture = tex
+		m.uv1_triplanar = true          # no UVs on primitive boxes
+		m.uv1_triplanar_sharpness = 6.0
+		m.uv1_scale = Vector3.ONE * 0.12
+		m.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
+	_mat_cache[key] = m
+	return m
+
+## Surface-detail textures live in a small autoload-free helper so the whole
+## city shares one generated image per kind.
+func _detail_tex(kind: String) -> Texture2D:
+	if _detail_cache.has(kind):
+		return _detail_cache[kind]
+	var sd = load("res://scripts/world/surface_detail.gd")
+	var t: Texture2D = null
+	if sd != null:
+		t = sd.grain() if kind == "grain" else sd.mottle()
+	_detail_cache[kind] = t
+	return t
 
 ## Glass: dark base, but with real specular so it picks up sky and sun instead
 ## of sitting as a flat black rectangle.
@@ -321,6 +358,14 @@ func _label3d(text: String, pos: Vector3, parent: Node3D, size: float,
 	l.billboard = BaseMaterial3D.BILLBOARD_DISABLED
 	l.no_depth_test = false
 	l.shaded = false
+	# Signage is the city's largest draw-call cost: text cannot be merged into a
+	# batched mesh, so every shopfront label is its own draw. The cheap, correct
+	# fix for a phone is a view distance. Past ~55 m a 0.7 m sign is smaller than
+	# the pixels it would draw, so fading it out costs nothing visually and takes
+	# thousands of draws out of the frame entirely.
+	l.visibility_range_end = 55.0
+	l.visibility_range_end_margin = 8.0
+	l.visibility_range_fade_mode = GeometryInstance3D.VISIBILITY_RANGE_FADE_SELF
 	parent.add_child(l)
 	return l
 
@@ -565,7 +610,9 @@ func shophouse(pos: Vector3, rot_y: float, w: float, d: float, floors: int,
 
 	var fh := 3.3
 	var h := float(floors) * fh
-	var body_mat := _mat(_q(paint), 0.86, 0.02)
+	# The body is textured; trim stays flat so edges and fascias keep crisp
+	# silhouettes against the stained wall behind them.
+	var body_mat := _wall_mat(_q(paint), 0.86)
 	var trim_mat := _mat(_q(paint.lightened(0.15)), 0.9)
 	var shade_col: Color = paint.darkened(0.30)
 	var shade_mat := _mat(_q(shade_col), 0.95)

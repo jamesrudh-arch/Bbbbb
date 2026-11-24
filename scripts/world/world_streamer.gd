@@ -37,6 +37,15 @@ func _process(delta: float) -> void:
 		# reaching its first frame.
 		if node.visible and not node.has_meta("people_spawned"):
 			world.builder._spawn_street_people(node, id)
+		# Night light pools follow the same rule: a light in a district nobody
+		# can see is a light the mobile renderer still has to account for.
+		if node.visible and not node.has_meta("night_built"):
+			node.set_meta("night_built", true)
+			var sn = load("res://scripts/world/street_night.gd").new()
+			sn.name = "StreetNight"
+			node.add_child(sn)
+			sn.build(node, Vector3.ZERO, 70.0, int(hash(id)))
+			sn.set_night(world.night_factor)
 		# Freeze distant simulation flags consumed by NPC / traffic actors.
 		node.set_meta("sim_active", near)
 	_scale_quality()
