@@ -1124,12 +1124,15 @@ func bake_static(root: Node) -> int:
 		root.add_child(out)
 		baked += 1
 
-	# free the originals
+	# Free the originals. free() rather than queue_free(): the parent has been
+	# rebuilt in the same frame, and a queued free leaves the node alive with no
+	# parent until end of frame - an orphan. Thousands of those per world is what
+	# produced the "leaked instance dependency" flood at exit.
 	for mat in groups:
 		for mi in by_mat[mat]:
 			if is_instance_valid(mi) and mi.get_parent() != null:
 				mi.get_parent().remove_child(mi)
-				mi.queue_free()
+				mi.free()
 	return baked
 
 # ============================================================ STREET LIBRARY
@@ -1140,20 +1143,41 @@ func bake_static(root: Node) -> int:
 ## in batches, then combine them into a city" structure.
 var _library: Dictionary = {}
 
-## Build, bake and cache a street of `type`. Returns a fresh duplicate that can
-## be moved and parented freely.
+## Baked street sources are held OUT of the tree.
+##
+## They used to be children of the kit forever: every cached street kept its full
+## node tree live inside the district, so a district carried roughly double its
+## own geometry for the life of the process. Nothing ever renders a source - only
+## the duplicates - so the tree was holding it for nothing.
 func get_street(type: int, variant: int = 0, length: float = 78.0) -> Node3D:
 	var key := "%d_%d_%d" % [type, variant, int(length)]
 	if not _library.has(key):
 		var k = load("res://scripts/world/street_kit.gd").new()
+		k.name = "StreetSource"
 		k.set_seed(hash(key))
+		# In the tree while it is built: the builders need a parent.
 		add_child(k)
 		k.build_street(Vector3.ZERO, Vector3(1, 0, 0), length, type)
 		k.bake_static(k)
+		# Detach without leaving an orphan. remove_child() alone leaves the node
+		# alive with no parent, and one source is a few hundred nodes.
+		remove_child(k)
 		_library[key] = k
 	var src: Node3D = _library[key]
 	var dup := src.duplicate(Node.DUPLICATE_USE_INSTANTIATION)
 	return dup
+
+## The cached sources have no parent, so nothing frees them unless this does:
+## without it they survive to process exit and Godot reports them as leaked.
+func _exit_tree() -> void:
+	clear_library()
+
+func clear_library() -> void:
+	for key in _library:
+		var k = _library[key]
+		if is_instance_valid(k):
+			k.free()
+	_library.clear()
 
 # ============================================================ STREET PEOPLE
 ## A street with no people in it is a film set. Full actors are a separate system

@@ -59,6 +59,13 @@ func _ready() -> void:
 		s.bus = "SFX"
 		add_child(s)
 		_ui.append(s)
+	for i in MAX3D:
+		var s3 := AudioStreamPlayer3D.new()
+		s3.bus = "SFX"
+		s3.unit_size = 14.0
+		s3.max_distance = 70.0
+		add_child(s3)
+		_pool.append(s3)
 	apply_volume()
 
 func _mk_music() -> AudioStreamPlayer:
@@ -141,16 +148,20 @@ func play_at(id: String, pos: Vector3, pitch: float = 1.0, volume_db: float = 0.
 	if path == "" or not ResourceLoader.exists(path): return
 	var tree := get_tree()
 	if tree == null or tree.current_scene == null: return
-	var p := AudioStreamPlayer3D.new()
+	# Take an idle player from the pool rather than allocating one. A node per
+	# footstep is churn, and any playback still alive at teardown leaked an
+	# AudioStreamPlaybackWAV (the pool existed but was never used).
+	if _pool.is_empty(): return
+	var p: AudioStreamPlayer3D = _pool[0]
+	for c in _pool:
+		if not c.playing:
+			p = c
+			break
 	p.stream = load(path)
 	p.pitch_scale = pitch
 	p.volume_db = volume_db
-	p.unit_size = 14.0
-	p.max_distance = 70.0
-	tree.current_scene.add_child(p)
 	p.global_position = pos
 	p.play()
-	p.finished.connect(p.queue_free)
 
 func play_stinger(id: String) -> void:
 	var map := {

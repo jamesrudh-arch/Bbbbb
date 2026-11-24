@@ -381,6 +381,9 @@ func _complete_mission() -> void:
 	mission_completed.emit(id)
 	notify("Mission complete", data.get("title", id), "mission")
 	mission = {}
+	# Autosave here rather than on a timer: a completed mission is exactly the
+	# progress a player would be sick to lose.
+	autosave()
 
 func abandon_mission() -> void:
 	if mission.is_empty(): return
@@ -421,6 +424,20 @@ func collect_fragment(fid: String) -> bool:
 # =========================================================== SAVE / LOAD
 func _slot_path(slot: int) -> String:
 	return "%s/slot_%d.save" % [SAVE_DIR, slot]
+
+const AUTOSAVE_SLOT := 9
+
+## Newest slot the player can continue from, autosave included.
+func latest_save_slot() -> int:
+	for i in range(SLOT_COUNT - 1, -1, -1):
+		if FileAccess.file_exists(_slot_path(i)):
+			return i
+	if FileAccess.file_exists(_slot_path(AUTOSAVE_SLOT)):
+		return AUTOSAVE_SLOT
+	return -1
+
+func autosave() -> void:
+	save_game(AUTOSAVE_SLOT)
 
 func save_game(slot: int) -> bool:
 	var d := {

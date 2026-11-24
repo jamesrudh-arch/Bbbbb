@@ -18,7 +18,11 @@ func _spawn_fragments() -> void:
 		var district: String = districts[placed % districts.size()]
 		var center: Vector3 = world.builder.district_center(district)
 		var nodes: Array = world.builder.nav_nodes.get(district, [])
-		if nodes.is_empty(): continue
+		if nodes.is_empty():
+			# Skip a district with no navigation, but never retry the same slot:
+			# advancing here is what stops this loop becoming a silent hang.
+			placed += 1
+			continue
 		var offset: Vector3 = nodes[randi() % nodes.size()]
 		var pos: Vector3 = center + offset + Vector3(randf_range(-3, 3), 0.9, randf_range(-3, 3))
 		_create_fragment("frag_%d" % (placed + 1), pos)
@@ -72,7 +76,7 @@ func collect(node: Node3D) -> void:
 			break
 	node.queue_free()
 	if Game.mission.is_empty(): return
-	var obj := Game.current_objective()
+	var obj: Dictionary = Game.current_objective()
 	if str(obj.get("type", "")) == "collect":
 		Game.add_mission_progress(1)
 

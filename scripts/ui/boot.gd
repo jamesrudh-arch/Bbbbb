@@ -18,7 +18,9 @@ func _ready() -> void:
 	_stage_root = Control.new()
 	_stage_root.set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_child(_stage_root)
-	_show_stage(0)
+	# A returning player has already accepted the notice: start at the title and
+	# let the stage machine roll into the menu, never through the notice again.
+	_show_stage(0 if not _notice_accepted() else 1)
 	# Capture mode: `--openflow` walks studio -> title -> notice and screenshots each.
 	if OS.get_cmdline_user_args().has("--openflow"):
 		_auto_capture()
@@ -39,7 +41,13 @@ func _auto_capture() -> void:
 			print("SHOT_SAVED ", path, " stage=", _stage)
 	get_tree().quit()
 
+func _notice_accepted() -> bool:
+	return FileAccess.file_exists(NOTICE_FILE)
+
 func _show_stage(stage: int) -> void:
+	# Skip the notice on every launch after the first.
+	if stage == 2 and _notice_accepted():
+		stage = 3
 	for c in _stage_root.get_children():
 		c.queue_free()
 	_timer = 0.0
@@ -190,7 +198,13 @@ func _save_notice() -> void:
 		f.store_string("seen")
 		f.close()
 
+var _depart_disabled := false
+
 func _depart() -> void:
+	# A probe can hold the final stage instead of being torn down by the scene
+	# swap that stage performs.
+	if _depart_disabled:
+		return
 	Loader.goto_scene("res://scenes/main_menu.tscn", 0.4)
 
 func _advance() -> void:

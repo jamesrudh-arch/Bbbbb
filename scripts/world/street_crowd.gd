@@ -111,9 +111,16 @@ func _animate(fig: Node3D, lib: AnimationLibrary) -> void:
 	ap.name = "CrowdAnim"
 	fig.add_child(ap)
 	ap.add_animation_library("", lib)
+	# An empty library is possible: a rig scene can load while its clips are
+	# still missing from the cache. Indexing [0] on that crashed once per figure
+	# per frame; a static figure is the correct fallback, not a crash.
+	var list := ap.get_animation_list()
+	if list.is_empty():
+		ap.queue_free()
+		return
 	var clip: String = CROWD_CLIPS[_rng.randi_range(0, CROWD_CLIPS.size() - 1)]
 	if not ap.has_animation(clip):
-		clip = "Walk" if ap.has_animation("Walk") else ap.get_animation_list()[0]
+		clip = "Walk" if ap.has_animation("Walk") else String(list[0])
 	var anim := ap.get_animation(clip)
 	if anim != null:
 		anim.loop_mode = Animation.LOOP_LINEAR

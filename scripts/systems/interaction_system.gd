@@ -78,6 +78,15 @@ func set_prompt(target: Node3D) -> void:
 
 func activate(target: Node3D, player) -> void:
 	if target == null: return
+	if target.has_meta("kind") and target.get_meta("kind") == "pickup":
+		world.pickups.collect(target)
+		Audio.play_ui("pickup")
+		return
+	if target.has_meta("kind") and target.get_meta("kind") == "shop":
+		var vendor := str(target.get_meta("vendor", "general"))
+		world.hud.open_shop(vendor)
+		Audio.play_ui("click")
+		return
 	if target is VehicleBody3D:
 		player.driver.enter(target)
 		return

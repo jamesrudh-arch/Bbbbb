@@ -87,22 +87,35 @@ func _build_streets(root: Node3D, id: String, _info: Dictionary, rng: RandomNumb
 	var span: float = pitch * 2.0 + 8.0                           # 160 m, overlaps at the junction
 	var mid: float = pitch * 0.5
 
-	var v := 0
-	# Streets running along the X axis, on the block lines.
-	for z in [-mid, mid]:
-		var st: Node3D = kit.get_street(type, v, span)
-		st.name = "Street_Z%d" % int(z)
-		st.position = Vector3(-span * 0.5, 0.0, z)
-		root.add_child(st)
-		v += 1
-	# Streets running along the Z axis, crossing them.
+	# VARIETY IS BOUGHT WITH MEMORY, SO IT IS BOUGHT WHERE IT SHOWS.
+	#
+	# Each street variant is a separately baked source of ~196,000 vertices, and a
+	# source cannot be freed while any duplicate of it is alive. Asking for four
+	# variants per district meant four sources — measured 235 MB of the 350 MB a
+	# district cost — for streets that read almost identically, because a variant
+	# only changes the RNG seed used to place shop units on a fixed chassis.
+	#
+	# So the crossing pair reuses the same baked source as the first pair (its
+	# duplicates share the source's mesh data, so they cost transforms only), and
+	# the second variant is spent on the street that faces the player rather than
+	# on one that closes the block behind him.
+	var st_a: Node3D = kit.get_street(type, 0, span)
+	st_a.name = "Street_Z%d" % int(-mid)
+	st_a.position = Vector3(-span * 0.5, 0.0, -mid)
+	root.add_child(st_a)
+
+	var st_b: Node3D = kit.get_street(type, 1, span)
+	st_b.name = "Street_Z%d" % int(mid)
+	st_b.position = Vector3(-span * 0.5, 0.0, mid)
+	root.add_child(st_b)
+
+	# Crossings reuse source 0: same geometry, turned 90 degrees.
 	for x in [-mid, mid]:
-		var st2: Node3D = kit.get_street(type, v, span)
+		var st2: Node3D = kit.get_street(type, 0, span)
 		st2.name = "Street_X%d" % int(x)
 		st2.position = Vector3(x, 0.0, -span * 0.5)
 		st2.rotation.y = PI * 0.5
 		root.add_child(st2)
-		v += 1
 
 ## Spawn the street crowd for one district. Called by the streamer when a
 ## district becomes visible, not at load: 36 skinned figures built up front for

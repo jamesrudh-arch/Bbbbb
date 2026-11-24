@@ -160,7 +160,7 @@ func _spawn_vendor(room: Node3D, origin: Vector3, info: Dictionary) -> void:
 	var size: Vector2 = info["size"]
 	a.global_position = origin + Vector3(0, 0.2, -size.y * 0.32 - 1.2)
 	a.set_meta("interact", true)
-	a.set_meta("kind", "vendor")
+	a.set_meta("kind", "shop")
 	a.set_meta("vendor", info.get("vendor", "general"))
 	a.wander_center = a.global_position
 	a.notice_range = 3.0

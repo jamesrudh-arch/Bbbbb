@@ -96,6 +96,7 @@ func _build() -> void:
 	_build_vehicle_panel()
 	_build_menu()
 	_build_shop()
+	_build_jobs()
 	_build_phone()
 	# Must run after the widgets exist: it shifts the root control inwards.
 	apply_safe_area()
@@ -787,6 +788,31 @@ func _build_shop() -> void:
 var shop_title: Label
 var shop_list: VBoxContainer
 
+var _jobs: Control
+var jobs_list: VBoxContainer
+
+func _build_jobs() -> void:
+	_jobs = _fullscreen_overlay()
+	var p := _panel(Color(0.045, 0.05, 0.062, 0.98), 18)
+	p.set_anchors_preset(Control.PRESET_CENTER)
+	p.position = Vector2(-330, -250)
+	p.custom_minimum_size = Vector2(660, 500)
+	_jobs.add_child(p)
+	var v := VBoxContainer.new()
+	v.add_theme_constant_override("separation", 8)
+	p.add_child(v)
+	v.add_child(_label("JOBS", 24, GOLD))
+	var scroll := ScrollContainer.new()
+	scroll.custom_minimum_size = Vector2(630, 370)
+	v.add_child(scroll)
+	jobs_list = VBoxContainer.new()
+	jobs_list.custom_minimum_size = Vector2(620, 0)
+	jobs_list.add_theme_constant_override("separation", 6)
+	scroll.add_child(jobs_list)
+	var close := _btn("CLOSE", 15)
+	close.pressed.connect(func(): _jobs.visible = false)
+	v.add_child(close)
+
 func open_shop(vendor_id: String) -> void:
 	if _shop == null: return
 	var data: Dictionary = Content.SHOP_ITEMS.get(vendor_id, Content.SHOP_ITEMS["general"])
@@ -859,6 +885,12 @@ func toggle_phone() -> void:
 			show_dialogue(cdata["name"], _contact_line(str(cdata["bio"])))
 		)
 		list.add_child(b)
+	# JOBS BOARD: Game.start_mission_from_job() and 15 written side jobs existed,
+	# but nothing in the UI called it: the work was in the game and unreachable.
+	# Every job that is not finished is work the player can take right now.
+	var jobs_btn := _btn("JOBS", 14)
+	jobs_btn.pressed.connect(func(): toggle_jobs())
+	phone_vbox.add_child(jobs_btn)
 	var radio_btn := _btn("RADIO", 14)
 	radio_btn.pressed.connect(func(): _cycle_radio())
 	phone_vbox.add_child(radio_btn)
@@ -868,6 +900,46 @@ func toggle_phone() -> void:
 
 func _contact_line(bio: String) -> String:
 	return bio
+
+## Jobs the player could take now: not already done, and not the one running.
+func _available_jobs() -> Array:
+	var out: Array = []
+	for jid in Content.SIDE_JOBS:
+		if Game.completed_jobs.has(jid):
+			continue
+		if not Game.mission.is_empty() and str(Game.mission.get("job", "")) == str(jid):
+			continue
+		out.append(jid)
+	return out
+
+func toggle_jobs() -> void:
+	if _jobs == null: return
+	_jobs.visible = not _jobs.visible
+	if not _jobs.visible: return
+	for c in jobs_list.get_children():
+		c.queue_free()
+	var avail: Array = _available_jobs()
+	if avail.is_empty():
+		jobs_list.add_child(_label("No work on the board right now.", 13, TEXT_DIM))
+		return
+	for jid in avail:
+		var job: Dictionary = Content.SIDE_JOBS[jid]
+		var row := _panel(Color(0.08, 0.085, 0.10, 0.92), 10)
+		var v := VBoxContainer.new()
+		v.add_theme_constant_override("separation", 3)
+		row.add_child(v)
+		v.add_child(_label(str(job.get("name", jid)), 15, GOLD))
+		v.add_child(_label(str(job.get("brief", "")), 11, TEXT_DIM))
+		var take := _btn("TAKE THE JOB", 12)
+		var jid_c: String = str(jid)
+		take.pressed.connect(func():
+			# Close the board, then start: the mission spawns its own targets.
+			_jobs.visible = false
+			_phone.visible = false
+			Game.start_mission_from_job(jid_c, Content.SIDE_JOBS[jid_c])
+		)
+		v.add_child(take)
+		jobs_list.add_child(row)
 
 func _cycle_radio() -> void:
 	var stations: Array = Content.RADIO["stations"]
