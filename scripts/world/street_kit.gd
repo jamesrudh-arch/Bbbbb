@@ -137,8 +137,9 @@ func danfo(pos: Vector3, rot_y: float = 0.0) -> Node3D:
 
 	# Body: van proportions, slightly tall and narrow.
 	_box(Vector3(1.9, 1.55, 4.3), Vector3(0, 1.15, 0), yellow, n)
-	# Cab step-down front
-	_box(Vector3(1.86, 0.95, 0.85), Vector3(0, 0.86, -2.35), yellow, n)
+	# Cab step-down front, tucked inside the body span so it reads as a bonnet
+	# rather than a block stuck on the nose.
+	_box(Vector3(1.88, 0.86, 0.62), Vector3(0, 0.80, -1.92), yellow, n)
 	# Double black stripes: the danfo signature.
 	_box(Vector3(1.93, 0.16, 4.28), Vector3(0, 1.62, 0), dark, n)
 	_box(Vector3(1.93, 0.09, 4.28), Vector3(0, 1.42, 0), dark, n)
@@ -150,25 +151,34 @@ func danfo(pos: Vector3, rot_y: float = 0.0) -> Node3D:
 			_mat(Color(0.35, 0.30, 0.26).darkened(_rng.randf_range(0, 0.2)), 0.9), n)
 	# Windscreen + side glazing
 	var glass := _mat(Color(0.12, 0.16, 0.20), 0.12, 0.4)
-	_box(Vector3(1.72, 0.62, 0.06), Vector3(0, 1.38, -2.72), glass, n)
+	_box(Vector3(1.74, 0.66, 0.06), Vector3(0, 1.34, -2.16), glass, n)
 	for sx in [-0.97, 0.97]:
-		_box(Vector3(0.05, 0.55, 2.6), Vector3(sx, 1.42, 0.1), glass, n)
+		_box(Vector3(0.04, 0.62, 2.75), Vector3(sx, 1.40, 0.05), glass, n)
 	# Open sliding door on the kerb side (passengers hang out of it)
 	_box(Vector3(0.06, 1.20, 1.15), Vector3(0.97, 1.05, -1.15),
 		_mat(Color(0.08, 0.07, 0.07), 0.9), n)
 	# Headlights / taillights
 	for sx in [-0.62, 0.62]:
-		_box(Vector3(0.34, 0.20, 0.06), Vector3(sx, 0.92, -2.78), _emissive(Color(1, 0.94, 0.75), 2.6), n)
+		_box(Vector3(0.34, 0.20, 0.07), Vector3(sx, 0.84, -2.20), _emissive(Color(1, 0.94, 0.75), 2.6), n)
 		_box(Vector3(0.28, 0.24, 0.06), Vector3(sx, 1.05, 2.16), _emissive(Color(0.95, 0.15, 0.10), 1.8), n)
-	# Wheels
-	var tyre := _mat(Color(0.06, 0.06, 0.07), 0.95)
-	for wp in [Vector3(-0.92, 0.42, -1.55), Vector3(0.92, 0.42, -1.55),
-			Vector3(-0.92, 0.42, 1.5), Vector3(0.92, 0.42, 1.5)]:
-		var w := _cyl(0.42, 0.24, wp, tyre, n)
+	# Wheels. A cylinder is built along +Y, so it is rotated onto the X axis to
+	# become a wheel and pulled inside the body width; half of it protrudes.
+	var tyre := _mat(Color(0.075, 0.075, 0.08), 0.95)
+	var hub := _mat(Color(0.52, 0.52, 0.50), 0.45, 0.6)
+	for wp in [Vector3(-0.86, 0.40, -1.50), Vector3(0.86, 0.40, -1.50),
+			Vector3(-0.86, 0.40, 1.46), Vector3(0.86, 0.40, 1.46)]:
+		var w := _cyl(0.40, 0.22, wp, tyre, n)
 		w.rotation.z = PI * 0.5
-	# Painted slogan on the flank
-	_label3d(SLOGANS[_rng.randi_range(0, SLOGANS.size() - 1)], Vector3(0, 1.05, 2.18),
-		n, 0.30, Color(0.10, 0.08, 0.30), 0.0)
+		var h := _cyl(0.17, 0.235, wp, hub, n)
+		h.rotation.z = PI * 0.5
+	# Painted slogan on the flank. Real ones are hand-lettered in white or black
+	# along the side; text must be sized to fit the 4.3 m flank or it clips.
+	var sl: String = SLOGANS[_rng.randi_range(0, SLOGANS.size() - 1)]
+	var sl_size: float = minf(0.26, 2.6 / maxf(1.0, float(sl.length()) * 0.60))
+	for sx in [-1.0, 1.0]:
+		var l := _label3d(sl, Vector3(sx * 0.97, 0.78, 0.35), n, sl_size,
+			Color(0.97, 0.96, 0.92), 0.35)
+		l.rotation.y = sx * PI * 0.5
 	return n
 
 # ------------------------------------------------------------------ KIOSK
