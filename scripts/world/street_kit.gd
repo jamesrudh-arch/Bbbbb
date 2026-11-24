@@ -1001,6 +1001,12 @@ func build_street(origin: Vector3, dir: Vector3, length: float, type: int) -> No
 			shophouse_row(origin, d, length, side, type)
 	if part != "noprops":
 		populate_street(origin, d, length, type)
+	# Street people are deliberately NOT built here. Every skinned figure carries a
+	# skeleton that cannot be batched, and building them for all four streets of
+	# all six districts at load put the scene over the point where the first frame
+	# ever completed. The city builder spawns them per rendered district instead.
+	if part == "forcepeople":
+		populate_people(origin, d, length, type)
 	if part != "nocables":
 		power_lines(origin, d, length, type)
 	if part != "noground":
@@ -1037,6 +1043,10 @@ func bake_static(root: Node) -> int:
 		if n is MeshInstance3D:
 			var mi := n as MeshInstance3D
 			if mi.mesh == null: continue
+			# skinned characters are driven by bones; merging them and freeing
+			# the skeleton makes every person vanish
+			if mi.skeleton != NodePath():
+				continue
 			var mat: Material = mi.material_override
 			if not by_mat.has(mat):
 				by_mat[mat] = []
@@ -1096,3 +1106,155 @@ func get_street(type: int, variant: int = 0, length: float = 78.0) -> Node3D:
 	var src: Node3D = _library[key]
 	var dup := src.duplicate(Node.DUPLICATE_USE_INSTANTIATION)
 	return dup
+
+# ============================================================ STREET PEOPLE
+## A street with no people in it is a film set. Full actors are a separate system
+## with their own AI and animation; what a street needs statically is figures
+## occupying it - traders behind stalls, people walking, someone sitting on a
+## step. These are posed ModelInstance-style figures merged into the bake, so they
+## cost the same as any other static geometry.
+const PEOPLE_MODELS := ["casual-male", "casual-female", "casual2-male",
+	"casual2-female", "casual3-male", "casual3-female", "worker-male",
+	"worker-female", "casual-bald", "suit-male", "suit-female"]
+const PEOPLE_PATHS := "res://assets/characters/players/%s.glb"
+
+var _people_cache: Dictionary = {}
+
+## Skin and clothing are randomised per figure the same way character_rig does it,
+## so a crowd is not a row of identical clones. Without this the models render in
+## their raw authored colours and read as black silhouettes.
+const SKIN_TONES := [Color(0.36, 0.22, 0.15), Color(0.48, 0.32, 0.21),
+	Color(0.62, 0.44, 0.30), Color(0.28, 0.17, 0.12), Color(0.74, 0.56, 0.40)]
+const SHIRT_COLS := [Color(0.86, 0.30, 0.22), Color(0.22, 0.44, 0.66),
+	Color(0.92, 0.74, 0.26), Color(0.30, 0.56, 0.38), Color(0.88, 0.88, 0.86),
+	Color(0.62, 0.32, 0.62), Color(0.34, 0.34, 0.36), Color(0.94, 0.50, 0.20)]
+
+func _tint_person(root: Node) -> void:
+	var skin: Color = SKIN_TONES[_rng.randi_range(0, SKIN_TONES.size() - 1)]
+	var shirt: Color = SHIRT_COLS[_rng.randi_range(0, SHIRT_COLS.size() - 1)]
+	var parts := root.find_children("*", "MeshInstance3D", true, false)
+	for node in parts:
+		var mi := node as MeshInstance3D
+		if mi.mesh == null: continue
+		for si in mi.mesh.get_surface_count():
+			var src := mi.mesh.surface_get_material(si) as BaseMaterial3D
+			if src == null: continue
+			var mat := StandardMaterial3D.new()
+			mat.roughness = 0.74
+			mat.metallic = 0.0
+			match src.resource_name:
+				"Skin": mat.albedo_color = skin
+				"Face": mat.albedo_color = skin.lerp(Color(1, 1, 1), 0.34)
+				"Shirt": mat.albedo_color = shirt
+				"Pants": mat.albedo_color = Color(0.14, 0.15, 0.19).lerp(shirt, 0.16)
+				"Belt": mat.albedo_color = Color(0.10, 0.08, 0.07)
+				"Hair": mat.albedo_color = Color(0.08, 0.06, 0.05)
+				_: mat.albedo_color = src.albedo_color
+			mi.set_surface_override_material(si, mat)
+			mi.set_surface_override_material(si, mat)   # ensure applied per surface
+
+func _person_model(name: String) -> PackedScene:
+	if _people_cache.has(name):
+		return _people_cache[name]
+	var path := PEOPLE_PATHS % name
+	var ps: PackedScene = null
+	if ResourceLoader.exists(path):
+		ps = load(path)
+	_people_cache[name] = ps
+	return ps
+
+## A single static figure at `pos`, facing `rot_y`. Returns the node even if the
+## model is missing, so callers do not have to check.
+const PERSON_SCALE := 0.92   # authoring height is 2.0 m; game adults are ~1.84 m
+
+func person(pos: Vector3, rot_y: float, parent: Node3D = null,
+		model_name: String = "", scale_mul: float = 1.0) -> Node3D:
+	var n := Node3D.new()
+	n.name = "Person"
+	n.position = pos
+	n.rotation.y = rot_y
+	(parent if parent != null else self).add_child(n)
+	var nm := model_name
+	if nm == "":
+		nm = PEOPLE_MODELS[_rng.randi_range(0, PEOPLE_MODELS.size() - 1)]
+	var ps := _person_model(nm)
+	if ps == null:
+		# visible fallback so a missing asset is obvious rather than silent
+		_box(Vector3(0.4, 1.7, 0.3), Vector3(0, 0.85, 0), _mat(Color(0.8, 0.1, 0.7)), n)
+		return n
+	var inst: Node3D = ps.instantiate()
+	inst.scale = Vector3.ONE * PERSON_SCALE * scale_mul
+	# UAC rigs are centre-origin and authored facing +Z, exactly as
+	# character_rig.gd notes. Without the lift the figure is buried to the waist
+	# in the pavement; without the turn it faces backwards.
+	# UAC rigs are authored facing +Z; Godot's forward is -Z.
+	inst.rotation.y = PI
+	n.add_child(inst)
+	_tint_person(inst)
+	_ground_person(inst)
+	return n
+
+## Put a figure's feet on the floor and get it out of the bind pose.
+## A skinned mesh's AABB reports the un-skinned bind pose, so it cannot be used
+## to find the feet; instead the figure is posed, then measured through the
+## skeleton, then translated so the lowest bone sits at y = 0.
+func _ground_person(inst: Node3D) -> void:
+	var sk: Skeleton3D = null
+	for nn in inst.find_children("*", "Skeleton3D", true, false):
+		sk = nn as Skeleton3D
+		break
+	# Pose: find an idle-ish clip if the model ships one, else leave the rest pose.
+	var ap: AnimationPlayer = null
+	for nn in inst.find_children("*", "AnimationPlayer", true, false):
+		ap = nn as AnimationPlayer
+		break
+	if ap != null:
+		for nm in ["Idle", "idle", "TPose", "T-Pose"]:
+			if ap.has_animation(nm):
+				ap.get_animation(nm).loop_mode = Animation.LOOP_LINEAR
+				ap.play(nm)
+				ap.seek(0.0, false)
+				break
+	# Ground on the lowest bone origin; feed/soles sit within a few cm of it.
+	if sk != null and sk.get_bone_count() > 0:
+		var lo := 1e9
+		for b in sk.get_bone_count():
+			lo = minf(lo, sk.get_bone_global_rest(b).origin.y)
+		inst.position.y = -lo * inst.scale.y
+
+
+## Pose a whole crowd down the street. Traders stand at stalls, others walk the
+## pavement. Kept sparse per metre: a crowd is a density gradient, not a crowd.
+func populate_people(origin: Vector3, dir: Vector3, length: float, type: int) -> Node3D:
+	var root := Node3D.new()
+	root.name = "People"
+	root.position = origin
+	root.rotation.y = atan2(dir.x, dir.z) - PI * 0.5
+	add_child(root)
+
+	# density per metre of street, and how many of them are traders
+	# Figures per metre. Deliberately low: each one is a skinned mesh with its own
+	# skeleton, which cannot be batched. A street reads as inhabited with four to
+	# six people in view.
+	var per_m := 0.03
+	var trader_share := 0.35
+	match type:
+		StreetType.MARKET: per_m = 0.075; trader_share = 0.55
+		StreetType.TRANSIT: per_m = 0.05; trader_share = 0.30
+		StreetType.RESIDENTIAL: per_m = 0.025; trader_share = 0.15
+		StreetType.INDUSTRIAL: per_m = 0.02; trader_share = 0.10
+		StreetType.CORPORATE: per_m = 0.03; trader_share = 0.10
+		StreetType.NIGHTLIFE: per_m = 0.055; trader_share = 0.25
+
+	var count := mini(6, int(length * per_m))
+	var walk_z: float = CH_ROAD_W * 0.5 + CH_WALK_W * 0.5
+	for i in count:
+		var t := _rng.randf_range(0.0, length)
+		var side: float = 1.0 if _rng.randf() < 0.5 else -1.0
+		var is_trader := _rng.randf() < trader_share
+		var z: float = side * (walk_z + (_rng.randf_range(-0.5, 0.9) if is_trader else _rng.randf_range(-1.0, 0.6)))
+		var p := Vector3(t, CH_KERB_H, z)
+		# facing: traders face the road, everyone else faces along the street
+		var face: float = (PI if side > 0.0 else 0.0) if is_trader else _rng.randf_range(0.0, TAU)
+		person(p, face, root, "", _rng.randf_range(0.94, 1.05))
+	return root

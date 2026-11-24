@@ -84,11 +84,17 @@ func _ready():
 	kit.set_seed(20261123)
 	add_child(kit)
 	var len_s := 110.0
-	kit.chassis(Vector3(-55, 0, 0), Vector3(1, 0, 0), len_s, stype)
+	var origin := Vector3(-55, 0, 0)
+	var os_env := OS.get_environment("STREET_ORIGIN")
+	if os_env != "":
+		var oa: PackedStringArray = os_env.split(",")
+		origin = Vector3(float(oa[0]), float(oa[1]), float(oa[2]))
+	kit.chassis(origin, Vector3(1, 0, 0), len_s, stype)
 	for side in [-1.0, 1.0]:
-		kit.shophouse_row(Vector3(-55, 0, 0), Vector3(1, 0, 0), len_s, side, stype)
-	kit.populate_street(Vector3(-55, 0.02, 0), Vector3(1, 0, 0), len_s, stype)
-	kit.power_lines(Vector3(-55, 0, 0), Vector3(1, 0, 0), len_s, stype)
+		kit.shophouse_row(origin, Vector3(1, 0, 0), len_s, side, stype)
+	kit.populate_street(origin, Vector3(1,0,0), len_s, stype)
+	kit.power_lines(origin, Vector3(1,0,0), len_s, stype)
+	kit.populate_people(origin, Vector3(1,0,0), len_s, stype)
 
 	for s2 in shots:
 		var c := Camera3D.new()

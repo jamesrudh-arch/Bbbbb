@@ -66,7 +66,12 @@ func _build_streets(root: Node3D, id: String, _info: Dictionary, rng: RandomNumb
 	if Content.has_meta("no_streets") and bool(Content.get_meta("no_streets")):
 		return
 	var only := str(Content.get_meta("only_part", ""))
+	var maxd := int(Content.get_meta("street_districts", 99))
+	if int(Content.get_meta("street_count", 0)) >= maxd:
+		return
+	Content.set_meta("street_count", int(Content.get_meta("street_count", 0)) + 1)
 	var kit = kit_script.new()
+	kit.name = "StreetKit"
 	kit.set_seed(int(rng.randi()))
 	root.add_child(kit)
 	var type: int = int(DISTRICT_STREETS.get(id, 0))
@@ -100,6 +105,26 @@ func _build_streets(root: Node3D, id: String, _info: Dictionary, rng: RandomNumb
 		st2.rotation.y = PI * 0.5
 		root.add_child(st2)
 		v += 1
+
+## Spawn the street crowd for one district. Called by the streamer when a
+## district becomes visible, not at load: 36 skinned figures built up front for
+## all six districts was enough to stop the scene from ever completing a frame.
+func _spawn_street_people(root: Node3D, id: String) -> void:
+	var kit = null
+	for c in root.get_children():
+		if c.get_script() != null and str(c.name) == "StreetKit":
+			kit = c
+	if kit == null:
+		return
+	if root.has_meta("people_spawned"):
+		return
+	root.set_meta("people_spawned", true)
+	var type: int = int(DISTRICT_STREETS.get(id, 0))
+	var span_pitch: float = 76.0
+	var span: float = span_pitch * 2.0 + 8.0
+	var mid: float = span_pitch * 0.5
+	# one street's worth of people, on the street facing the district centre
+	kit.populate_people(Vector3(-span * 0.5, 0.0, -mid), Vector3(1, 0, 0), span, type)
 
 # ---------------------------------------------------------------- ground
 func _build_ground(root: Node3D, info: Dictionary, _rng: RandomNumberGenerator) -> void:

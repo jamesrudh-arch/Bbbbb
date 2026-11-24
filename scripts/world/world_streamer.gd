@@ -32,6 +32,11 @@ func _process(delta: float) -> void:
 		var near := d < FAR_RANGE
 		var node: Node3D = districts[id]
 		node.visible = d < FAR_RANGE
+		# Street crowds are materialised the first time a district is shown.
+		# Building them at load for the whole city is what stopped the scene
+		# reaching its first frame.
+		if node.visible and not node.has_meta("people_spawned"):
+			world.builder._spawn_street_people(node, id)
 		# Freeze distant simulation flags consumed by NPC / traffic actors.
 		node.set_meta("sim_active", near)
 	_scale_quality()
